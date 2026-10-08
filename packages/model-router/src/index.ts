@@ -1,0 +1,4 @@
+export type ChatMessage={role:"system"|"user"|"assistant"|"tool";content:string};
+export class ModelRouter{
+ constructor(private c={baseUrl:process.env.VELCLI_BASE_URL||"https://api.openai.com/v1",apiKey:process.env.VELCLI_API_KEY||process.env.OPENAI_API_KEY||"",model:process.env.VELCLI_MODEL||""}){}
+ async chat(messages:ChatMessage[]){if(!this.c.apiKey)throw new Error("VELCLI_API_KEY is required");if(!this.c.model)throw new Error("VELCLI_MODEL is required");const r=await fetch(this.c.baseUrl.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"content-type":"application/json",authorization:`Bearer ${this.c.apiKey}`},body:JSON.stringify({model:this.c.model,messages,temperature:.2})});if(!r.ok)throw new Error(`Model request failed: ${r.status} ${await r.text()}`);const j=await r.json() as any;return String(j.choices?.[0]?.message?.content||"")}}
