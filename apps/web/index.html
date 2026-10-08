@@ -1,1 +1,58 @@
-<!doctype html><html><meta name="viewport" content="width=device-width,initial-scale=1"><title>VelCli</title><style>body{margin:0;background:#07080d;color:#f5f7ff;font:15px system-ui}main{max-width:900px;margin:auto;padding:48px 20px}.logo{font-size:28px;font-weight:800}.muted{color:#8d94a5}.box{margin-top:30px;padding:16px;border:1px solid #292d38;border-radius:18px;background:#0d1017}textarea{width:100%;min-height:120px;background:transparent;border:0;outline:0;color:white;font:inherit;resize:vertical}.run{margin-top:10px;padding:12px 18px;border:0;border-radius:12px;font-weight:700}.event{margin-top:10px;padding:12px;border:1px solid #242833;border-radius:12px;background:#0b0e14}</style><main><div class=logo>VELCLI</div><div class=muted>Autonomous Engineering Agent · VELCLAW</div><h1>What are we building?</h1><div class=box><textarea id=p placeholder="Describe what you want VelCli to build..."></textarea><button class=run onclick=run()>Run Agent</button></div><div id=e></div></main><script>async function run(){e.innerHTML='<div class=event>Running…</div>';try{let r=await fetch('/api/agent',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prompt:p.value})});let j=await r.json();e.innerHTML=(j.events||[]).map(x=>'<div class=event><b>'+x.type+'</b><br>'+(x.message||x.error||'')+'</div>').join('')}catch(x){e.innerHTML='<div class=event>'+x+'</div>'}}</script></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>VelCli — Velclaw</title>
+<style>
+:root{color-scheme:dark;--bg:#07090d;--panel:#0d1118;--panel2:#111722;--line:#202734;--text:#f5f7fb;--muted:#8791a3;--accent:#8b7cff;--ok:#5ee6a8;--warn:#ffca6b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#17152a 0,#07090d 42%);color:var(--text);font:14px Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
+main{width:min(1050px,100%);margin:auto;padding:24px 18px 48px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:10px}.mark{width:34px;height:34px;border:1px solid #35304f;border-radius:11px;background:linear-gradient(135deg,#16132a,#0d1017);display:grid;place-items:center;font-weight:900;color:#b8afff;box-shadow:0 0 30px #6d5cff18}.name{font-size:18px;font-weight:850;letter-spacing:.4px}.sub{font-size:11px;color:var(--muted);margin-top:2px}.status{font-size:11px;color:var(--ok);border:1px solid #1d4a3a;background:#0b1713;padding:6px 9px;border-radius:999px}
+.hero{padding:64px 0 28px}.eyebrow{color:#a69dff;font-weight:750;font-size:12px;letter-spacing:.12em;text-transform:uppercase}.hero h1{font-size:clamp(34px,7vw,62px);line-height:1.02;margin:12px 0;letter-spacing:-.045em}.hero p{max-width:650px;color:var(--muted);font-size:15px;line-height:1.65;margin:0}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px}.card{border:1px solid var(--line);background:linear-gradient(180deg,#0e131b,#0b0f15);border-radius:20px;box-shadow:0 20px 70px #0005;overflow:hidden}.composer{padding:14px}.composer textarea{display:block;width:100%;min-height:150px;resize:vertical;background:transparent;border:0;outline:0;color:var(--text);font:15px/1.6 inherit}.composer textarea::placeholder{color:#5e6879}.actions{display:flex;align-items:center;justify-content:space-between;padding-top:10px}.hint{color:#687284;font-size:11px}.run{border:0;border-radius:12px;padding:11px 16px;background:#f4f2ff;color:#101016;font-weight:800;cursor:pointer}.run:disabled{opacity:.5;cursor:wait}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--line);font-weight:750}.count{font-size:11px;color:var(--muted);font-weight:500}.events{padding:10px;max-height:440px;overflow:auto}.event{padding:10px 11px;border:1px solid #1d2430;border-radius:13px;background:#0a0e14;margin-bottom:8px}.event:last-child{margin-bottom:0}.event-title{display:flex;align-items:center;gap:7px;font-weight:700;font-size:12px}.dot{width:7px;height:7px;border-radius:50%;background:#697386}.event-body{color:#8f99aa;font-size:12px;line-height:1.5;margin-top:5px;white-space:pre-wrap;word-break:break-word}.approval{border-color:#5b4a1f;background:#161209}.approval button{margin-top:9px;border:1px solid #6b5724;border-radius:9px;padding:8px 11px;background:#201a0c;color:#ffda85;font-weight:750;cursor:pointer}.empty{color:#596476;text-align:center;padding:35px 12px;font-size:12px}
+@media(max-width:780px){main{padding:16px 12px 35px}.hero{padding:48px 0 22px}.workspace{grid-template-columns:1fr}.events{max-height:360px}.status{display:none}}
+</style>
+</head>
+<body>
+<main>
+<header class="top"><div class="brand"><div class="mark">V</div><div><div class="name">VELCLI</div><div class="sub">Autonomous Engineering Agent · VELCLAW</div></div></div><div class="status">● Online</div></header>
+<section class="hero"><div class="eyebrow">Engineering agent</div><h1>What are we building?</h1><p>Describe the outcome. VelCli can reason through a task, inspect the workspace, modify files, and execute approved terminal actions.</p></section>
+<section class="workspace">
+<div class="card"><div class="composer"><textarea id="prompt" placeholder="Build a production-ready feature…"></textarea><div class="actions"><span class="hint">Agent actions that modify files or run commands require approval.</span><button id="run" class="run" onclick="runAgent()">Run Agent</button></div></div></div>
+<div class="card"><div class="panel-head"><span>Agent timeline</span><span id="count" class="count">0 events</span></div><div id="events" class="events"><div class="empty">Events will appear here.</div></div></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);let total=0,running=false;
+function esc(v){return String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function add(x){
+ total++;$("count").textContent=total+" event"+(total===1?"":"s");
+ const el=document.createElement("div");el.className="event"+(x.type==="agent.approval.required"?" approval":"");
+ const title=x.type.replace("agent.","").replaceAll("."," · ");
+ let body=x.message||x.error||x.tool||"";
+ if(x.type==="agent.tool.result")body=typeof x.output==="string"?x.output:JSON.stringify(x.output,null,2);
+ if(x.type==="agent.tool.call")body=x.tool+(x.input?"\n"+JSON.stringify(x.input,null,2):"");
+ el.innerHTML='<div class="event-title"><span class="dot"></span>'+esc(title)+'</div><div class="event-body">'+esc(body)+'</div>';
+ if(x.type==="agent.approval.required"){
+   const b=document.createElement("button");b.textContent="Approve action";
+   b.onclick=()=>approve(x.approvalId,b);el.appendChild(b)
+ }
+ $("events").appendChild(el);$("events").scrollTop=$("events").scrollHeight
+}
+async function approve(id,b){b.disabled=true;b.textContent="Approving…";try{await fetch("/api/agent/approve",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({approvalId:id,approved:true})});b.textContent="Approved"}catch(e){b.disabled=false;b.textContent="Retry approval"}}
+async function runAgent(){
+ if(running)return;const prompt=$("prompt").value.trim();if(!prompt)return;
+ running=true;$("run").disabled=true;$("run").textContent="Running…";$("events").innerHTML="";total=0;$("count").textContent="0 events";
+ try{
+  const res=await fetch("/api/agent/stream",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({prompt})});
+  if(!res.ok)throw new Error(await res.text());if(!res.body)throw new Error("Streaming unavailable");
+  const reader=res.body.getReader(),dec=new TextDecoder();let buf="";
+  while(true){const {value,done}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});
+    const parts=buf.split("\n\n");buf=parts.pop()||"";
+    for(const part of parts){const line=part.split("\n").find(v=>v.startsWith("data: "));if(line)try{add(JSON.parse(line.slice(6)))}catch{}}
+  }
+ }catch(e){add({type:"agent.error",error:e.message||String(e)})}
+ finally{running=false;$("run").disabled=false;$("run").textContent="Run Agent"}
+}
+</script>
+</body></html>
