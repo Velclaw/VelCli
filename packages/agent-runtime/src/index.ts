@@ -2,37 +2,134 @@ import {randomUUID} from "node:crypto";
 import {ModelRouter} from "../../model-router/src/index.js";
 import {tools,toolNeedsApproval} from "../../agent-tools/src/index.js";
 import type {AgentEvent,ApprovalRequest} from "../../shared/src/types.js";
+
 type Emit=(e:AgentEvent)=>void;
 type Approve=(request:ApprovalRequest)=>Promise<boolean>;
+type ToolName=keyof typeof tools;
+type ToolCall={tool:ToolName;input?:Record<string,unknown>};
+type ModelDecision={final?:string;tool?:string;input?:Record<string,unknown>};
+
+const MAX_STEPS=Number(process.env.VELCLI_MAX_STEPS||12);
+const MAX_CONTEXT_CHARS=Number(process.env.VELCLI_MAX_CONTEXT_CHARS||24000);
+const MAX_MODEL_RETRIES=2;
+
+const toolDescriptions:Record<ToolName,string>={
+ "fs.read":"Read a UTF-8 file inside the workspace.",
+ "fs.write":"Create or overwrite a UTF-8 file inside the workspace.",
+ "fs.list":"List files/directories inside the workspace.",
+ "git.status":"Inspect current git status.",
+ "git.diff":"Inspect current unstaged git diff.",
+ "build.run":"Run the project build command.",
+ "test.run":"Run the project test command.",
+ "terminal.exec":"Execute a shell command inside the workspace."
+};
+
+function trimContext(value:string){
+ if(value.length<=MAX_CONTEXT_CHARS)return value;
+ return value.slice(-MAX_CONTEXT_CHARS);
+}
+
+function parseDecision(raw:string):ModelDecision{
+ const cleaned=raw.trim().replace(/^\`\`\`json\s*/i,"").replace(/\s*\`\`\`$/,"");
+ const parsed=JSON.parse(cleaned) as ModelDecision;
+ if(typeof parsed.final==="string")return{final:parsed.final};
+ if(typeof parsed.tool==="string")return{tool:parsed.tool,input:parsed.input||{}};
+ throw new Error("Model returned neither final nor tool decision");
+}
+
+function toolReason(tool:ToolName){
+ if(tool==="terminal.exec")return "Terminal command execution";
+ if(tool==="fs.write")return "Workspace file modification";
+ if(tool==="build.run")return "Project build execution";
+ if(tool==="test.run")return "Project test execution";
+ return "Tool execution";
+}
+
+function systemPrompt(){
+ const toolsText=(Object.keys(toolDescriptions) as ToolName[]).map(name=>`- ${name}: ${toolDescriptions[name]}`).join("\n");
+ return `You are VelCli, Velclaw's autonomous engineering agent.
+You operate inside a real software workspace. Inspect before modifying. Use tools deliberately and verify changes with git.diff, build.run, or test.run when appropriate.
+Return EXACTLY ONE JSON object and no markdown.
+For a tool call: {"tool":"<tool-name>","input":{...}}
+For completion: {"final":"<concise result>"}
+Available tools:
+${toolsText}
+Never claim a tool ran unless its result appears in Context. Never invent file contents or command output.`;
+}
+
 export class AgentRuntime{
  private model=new ModelRouter();
- async execute(prompt:string,emit:Emit,approve:Approve=async()=>true){
-   const runId=randomUUID();let context="";
-   emit({type:"agent.started",runId,message:"Agent run started"});
-   for(let step=0;step<8;step++){
-     emit({type:"agent.thinking",runId,step:step+1,message:`Planning step ${step+1}`});
-     const answer=await this.model.chat([
-       {role:"system",content:`You are VelCli, an autonomous engineering agent by Velclaw. Use ONLY JSON. Tool call: {"tool":"fs.read|fs.write|fs.list|git.status|git.diff|build.run|test.run|terminal.exec","input":{...}}. Finish: {"final":"..."}. Never claim a tool ran unless its result is in Context.`},
-       {role:"user",content:prompt+"\nContext:\n"+context}
-     ]);
-     let parsed:any;try{parsed=JSON.parse(answer)}catch{emit({type:"agent.completed",runId,message:answer});return{runId,message:answer}};
-     if(parsed.final){const message=String(parsed.final);emit({type:"agent.completed",runId,message});return{runId,message}}
-     if(!parsed.tool||!(parsed.tool in tools))throw new Error("Unknown tool request");
-     const input=parsed.input||{};
-     emit({type:"agent.tool.call",runId,step:step+1,tool:parsed.tool,input});
-     if(toolNeedsApproval(parsed.tool)){
-       const approvalId=randomUUID();
-       const request={id:approvalId,runId,tool:parsed.tool,input,reason:parsed.tool==="terminal.exec"?"Terminal command execution":"Workspace file modification"};
-       emit({type:"agent.approval.required",runId,step:step+1,tool:parsed.tool,input,approvalId,message:"Approval required before this tool can execute."});
-       const ok=await approve(request);
-       emit({type:"agent.approval.resolved",runId,approvalId,tool:parsed.tool,message:ok?"Approved":"Rejected"});
-       if(!ok){context+=`\nApproval rejected for ${parsed.tool}.`;continue}
+
+ private async decide(messages:{role:"system"|"user"|"assistant"|"tool";content:string}[]){
+   let lastError="";
+   for(let attempt=1;attempt<=MAX_MODEL_RETRIES;attempt++){
+     try{
+       const raw=await this.model.chat(messages);
+       return parseDecision(raw);
+     }catch(error){
+       lastError=error instanceof Error?error.message:String(error);
+       if(attempt<MAX_MODEL_RETRIES)await new Promise(r=>setTimeout(r,250*attempt));
      }
-     const out=await (tools as any)[parsed.tool](input);
-     context+=`\nTool ${parsed.tool}: ${JSON.stringify(out)}`;
-     emit({type:"agent.tool.result",runId,step:step+1,tool:parsed.tool,output:out});
-     if(parsed.tool==="fs.write")emit({type:"agent.file.changed",runId,path:String(input.path),message:"File changed"});
    }
-   throw new Error("Agent step limit reached");
+   throw new Error(`Model decision failed after retries: ${lastError}`);
+ }
+
+ async execute(prompt:string,emit:Emit,approve:Approve=async()=>true){
+   const runId=randomUUID();
+   let context="";
+   emit({type:"agent.started",runId,message:"Agent run started"});
+   if(!prompt.trim()){
+     const message="A non-empty task prompt is required.";
+     emit({type:"agent.error",runId,error:message});
+     throw new Error(message);
+   }
+
+   for(let step=0;step<MAX_STEPS;step++){
+     emit({type:"agent.thinking",runId,step:step+1,message:`Planning step ${step+1} of ${MAX_STEPS}`});
+     const decision=await this.decide([
+       {role:"system",content:systemPrompt()},
+       {role:"user",content:`Task:\n${prompt}\n\nContext:\n${trimContext(context)||"(no tool results yet)"}`}
+     ]);
+
+     if(decision.final){
+       emit({type:"agent.completed",runId,step:step+1,message:decision.final});
+       return{runId,message:decision.final,steps:step+1};
+     }
+
+     const tool=decision.tool as ToolName|undefined;
+     if(!tool||!(tool in tools))throw new Error(`Unknown tool request: ${String(decision.tool)}`);
+     const input=decision.input||{};
+     emit({type:"agent.tool.call",runId,step:step+1,tool,input});
+
+     if(toolNeedsApproval(tool)){
+       const approvalId=randomUUID();
+       const request={id:approvalId,runId,tool,input,reason:toolReason(tool)};
+       emit({type:"agent.approval.required",runId,step:step+1,tool,input,approvalId,message:`Approval required: ${toolReason(tool)}.`});
+       const ok=await approve(request);
+       emit({type:"agent.approval.resolved",runId,approvalId,tool,message:ok?"Approved":"Rejected"});
+       if(!ok){
+         context=trimContext(context+`\nApproval rejected for ${tool}: action was not executed.`);
+         continue;
+       }
+     }
+
+     let output:unknown;
+     try{
+       output=await tools[tool](input as never);
+     }catch(error){
+       const message=error instanceof Error?error.message:String(error);
+       context=trimContext(context+`\nTool ${tool} failed: ${message}`);
+       emit({type:"agent.tool.result",runId,step:step+1,tool,output:{error:message}});
+       continue;
+     }
+
+     context=trimContext(context+`\nTool ${tool}: ${JSON.stringify(output)}`);
+     emit({type:"agent.tool.result",runId,step:step+1,tool,output});
+     if(tool==="fs.write")emit({type:"agent.file.changed",runId,path:String(input.path||""),message:"File changed"});
+   }
+
+   const message=`Agent stopped after reaching the ${MAX_STEPS}-step safety limit.`;
+   emit({type:"agent.error",runId,error:message});
+   throw new Error(message);
  }
 }
