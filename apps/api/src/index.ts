@@ -1,5 +1,37 @@
-import "dotenv/config";import {createServer} from "node:http";import {AgentRuntime} from "../../../packages/agent-runtime/src/index.js";
+import "dotenv/config";
+import {createServer} from "node:http";
+import {AgentRuntime} from "../../../packages/agent-runtime/src/index.js";
+import type {ApprovalRequest,AgentEvent} from "../../../packages/shared/src/types.js";
 const port=Number(process.env.PORT||8787);
-const json=(r:any,s:number,d:any)=>{r.writeHead(s,{"content-type":"application/json","access-control-allow-origin":"*"});r.end(JSON.stringify(d))};
-const read=(q:any)=>new Promise<string>((ok,bad)=>{let s="";q.on("data",(x:any)=>s+=x);q.on("end",()=>ok(s));q.on("error",bad)});
-createServer(async(req,res)=>{if(req.url==="/health")return json(res,200,{ok:true,service:"velcli"});if(req.url==="/" )return json(res,200,{name:"VelCli",by:"Velclaw"});if(req.method==="POST"&&req.url==="/api/agent")try{const b=JSON.parse(await read(req));const events:any[]=[];const a=new VelCliAgent(e=>events.push(e));const out=await a.run(String(b.prompt||""));return json(res,200,{...out,events})}catch(e){return json(res,500,{error:e instanceof Error?e.message:String(e)})}json(res,404,{error:"not_found"})}).listen(port,()=>console.log(`VelCli API :${port}`));
+const approvals=new Map<string,(ok:boolean)=>void>();
+function headers(extra:Record<string,string>={}){return{"access-control-allow-origin":"*","access-control-allow-methods":"GET,POST,OPTIONS","access-control-allow-headers":"content-type",...extra}}
+function json(res:any,status:number,data:any){res.writeHead(status,headers({"content-type":"application/json"}));res.end(JSON.stringify(data))}
+function read(req:any){return new Promise<string>((resolve,reject)=>{let s="";req.on("data",(x:any)=>s+=x);req.on("end",()=>resolve(s));req.on("error",reject)})}
+async function runAgent(prompt:string,emit:(e:AgentEvent)=>void){
+ const runtime=new AgentRuntime();
+ return runtime.execute(prompt,emit,async(req:ApprovalRequest)=>new Promise<boolean>(resolve=>approvals.set(req.id,resolve)));
+}
+createServer(async(req,res)=>{
+ try{
+  if(req.method==="OPTIONS"){res.writeHead(204,headers());return res.end()}
+  if(req.url==="/health")return json(res,200,{ok:true,service:"velcli"});
+  if(req.url==="/")return json(res,200,{name:"VelCli",by:"Velclaw",status:"online"});
+  if(req.method==="POST"&&req.url==="/api/agent"){
+   const b=JSON.parse(await read(req));const events:AgentEvent[]=[];
+   const out=await runAgent(String(b.prompt||""),e=>events.push(e));return json(res,200,{...out,events})
+  }
+  if(req.method==="POST"&&req.url==="/api/agent/approve"){
+   const b=JSON.parse(await read(req));const resolve=approvals.get(String(b.approvalId));
+   if(!resolve)return json(res,404,{error:"approval_not_found"});
+   approvals.delete(String(b.approvalId));resolve(Boolean(b.approved));return json(res,200,{ok:true})
+  }
+  if(req.method==="POST"&&req.url==="/api/agent/stream"){
+   const b=JSON.parse(await read(req));const prompt=String(b.prompt||"");
+   res.writeHead(200,headers({"content-type":"text/event-stream","cache-control":"no-cache","connection":"keep-alive"}));
+   const send=(e:AgentEvent)=>res.write(`event: ${e.type}\ndata: ${JSON.stringify(e)}\n\n`);
+   try{await runAgent(prompt,send)}catch(e){send({type:"agent.error",runId:"unknown",error:e instanceof Error?e.message:String(e)})}
+   res.end();return
+  }
+  json(res,404,{error:"not_found"})
+ }catch(e){if(!res.headersSent)json(res,500,{error:e instanceof Error?e.message:String(e)});else res.end()}
+}).listen(port,()=>console.log(`VelCli API listening on :${port}`));
