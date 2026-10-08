@@ -6,7 +6,6 @@ import type {AgentEvent,ApprovalRequest} from "../../shared/src/types.js";
 type Emit=(e:AgentEvent)=>void;
 type Approve=(request:ApprovalRequest)=>Promise<boolean>;
 type ToolName=keyof typeof tools;
-type ToolCall={tool:ToolName;input?:Record<string,unknown>};
 type ModelDecision={final?:string;tool?:string;input?:Record<string,unknown>};
 
 const MAX_STEPS=Number(process.env.VELCLI_MAX_STEPS||12);
@@ -60,16 +59,11 @@ Never claim a tool ran unless its result appears in Context. Never invent file c
 export class AgentRuntime{
  private model=new ModelRouter();
 
- private async decide(messages:{role:"system"|"user"|"assistant"|"tool";content:string}[]){
+ private async decide(messages:import("../../model-router/src/index.js").ChatMessage[]){
    let lastError="";
    for(let attempt=1;attempt<=MAX_MODEL_RETRIES;attempt++){
-     try{
-       const raw=await this.model.chat(messages);
-       return parseDecision(raw);
-     }catch(error){
-       lastError=error instanceof Error?error.message:String(error);
-       if(attempt<MAX_MODEL_RETRIES)await new Promise(r=>setTimeout(r,250*attempt));
-     }
+     try{return await this.model.chatWithTools(messages,(Object.keys(toolDescriptions) as ToolName[]).map(name=>({name,description:toolDescriptions[name],inputSchema:{type:"object",properties:{path:{type:"string"},content:{type:"string"},command:{type:"string"}},additionalProperties:true}}))));}
+     catch(error){lastError=error instanceof Error?error.message:String(error);if(attempt<MAX_MODEL_RETRIES)await new Promise(r=>setTimeout(r,250*attempt));}
    }
    throw new Error(`Model decision failed after retries: ${lastError}`);
  }
@@ -77,6 +71,7 @@ export class AgentRuntime{
  async execute(prompt:string,emit:Emit,approve:Approve=async()=>true){
    const runId=randomUUID();
    let context="";
+   const messages:import("../../model-router/src/index.js").ChatMessage[]=[{role:"system",content:systemPrompt()},{role:"user",content:prompt}];
    emit({type:"agent.started",runId,message:"Agent run started"});
    if(!prompt.trim()){
      const message="A non-empty task prompt is required.";
@@ -86,46 +81,25 @@ export class AgentRuntime{
 
    for(let step=0;step<MAX_STEPS;step++){
      emit({type:"agent.thinking",runId,step:step+1,message:`Planning step ${step+1} of ${MAX_STEPS}`});
-     const decision=await this.decide([
-       {role:"system",content:systemPrompt()},
-       {role:"user",content:`Task:\n${prompt}\n\nContext:\n${trimContext(context)||"(no tool results yet)"}`}
-     ]);
-
-     if(decision.final){
-       emit({type:"agent.completed",runId,step:step+1,message:decision.final});
-       return{runId,message:decision.final,steps:step+1};
-     }
-
-     const tool=decision.tool as ToolName|undefined;
-     if(!tool||!(tool in tools))throw new Error(`Unknown tool request: ${String(decision.tool)}`);
-     const input=decision.input||{};
-     emit({type:"agent.tool.call",runId,step:step+1,tool,input});
-
-     if(toolNeedsApproval(tool)){
-       const approvalId=randomUUID();
-       const request={id:approvalId,runId,tool,input,reason:toolReason(tool)};
-       emit({type:"agent.approval.required",runId,step:step+1,tool,input,approvalId,message:`Approval required: ${toolReason(tool)}.`});
-       const ok=await approve(request);
-       emit({type:"agent.approval.resolved",runId,approvalId,tool,message:ok?"Approved":"Rejected"});
-       if(!ok){
-         context=trimContext(context+`\nApproval rejected for ${tool}: action was not executed.`);
-         continue;
+     const response=await this.decide(messages);
+     messages.push({role:"assistant",content:response.content,tool_calls:response.toolCalls});
+     if(!response.toolCalls.length){const final=response.content||"Agent completed without a final message.";emit({type:"agent.completed",runId,step:step+1,message:final});return{runId,message:final,steps:step+1};}
+     for(const call of response.toolCalls){
+       const tool=call.name as ToolName|undefined;
+       if(!tool||!(tool in tools))throw new Error(`Unknown tool request: ${String(call.name)}`);
+       const input=call.input||{};emit({type:"agent.tool.call",runId,step:step+1,tool,input});
+       if(toolNeedsApproval(tool)){
+         const approvalId=randomUUID();const request={id:approvalId,runId,tool,input,reason:toolReason(tool)};
+         emit({type:"agent.approval.required",runId,step:step+1,tool,input,approvalId,message:`Approval required: ${toolReason(tool)}.`});
+         const ok=await approve(request);emit({type:"agent.approval.resolved",runId,approvalId,tool,message:ok?"Approved":"Rejected"});
+         if(!ok){const rejected="Approval rejected; action was not executed.";messages.push({role:"tool",tool_call_id:call.id,content:rejected});emit({type:"agent.tool.result",runId,step:step+1,tool,output:{error:rejected}});continue;}
        }
+       let output:unknown;
+       try{output=await tools[tool](input as never);}catch(error){output={error:error instanceof Error?error.message:String(error)};}
+       messages.push({role:"tool",tool_call_id:call.id,content:trimContext(JSON.stringify(output))});
+       emit({type:"agent.tool.result",runId,step:step+1,tool,output});
+       if(tool==="fs.write")emit({type:"agent.file.changed",runId,path:String(input.path||""),message:"File changed"});
      }
-
-     let output:unknown;
-     try{
-       output=await tools[tool](input as never);
-     }catch(error){
-       const message=error instanceof Error?error.message:String(error);
-       context=trimContext(context+`\nTool ${tool} failed: ${message}`);
-       emit({type:"agent.tool.result",runId,step:step+1,tool,output:{error:message}});
-       continue;
-     }
-
-     context=trimContext(context+`\nTool ${tool}: ${JSON.stringify(output)}`);
-     emit({type:"agent.tool.result",runId,step:step+1,tool,output});
-     if(tool==="fs.write")emit({type:"agent.file.changed",runId,path:String(input.path||""),message:"File changed"});
    }
 
    const message=`Agent stopped after reaching the ${MAX_STEPS}-step safety limit.`;
