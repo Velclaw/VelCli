@@ -1,4 +1,4 @@
-import "dotenv/config";import {createServer} from "node:http";import {VelCliAgent} from "../../../packages/agent-core/src/index.js";
+import "dotenv/config";import {createServer} from "node:http";import {AgentRuntime} from "../../../packages/agent-runtime/src/index.js";
 const port=Number(process.env.PORT||8787);
 const json=(r:any,s:number,d:any)=>{r.writeHead(s,{"content-type":"application/json","access-control-allow-origin":"*"});r.end(JSON.stringify(d))};
 const read=(q:any)=>new Promise<string>((ok,bad)=>{let s="";q.on("data",(x:any)=>s+=x);q.on("end",()=>ok(s));q.on("error",bad)});
