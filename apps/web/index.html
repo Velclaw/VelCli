@@ -23,7 +23,8 @@ main{width:min(1050px,100%);margin:auto;padding:24px 18px 48px}.top{display:flex
 </section>
 </main>
 <script>
-const $=id=>document.getElementById(id);let total=0,running=false;\nfetch("/api/models").then(r=>r.json()).then(d=>{const p=d.providers||[]; $("model").textContent=p.length?p.map(x=>x.provider+" · "+x.model).join(", "):"No model configured"; $("status").textContent=p.length?"● API online":"● API online · model missing"}).catch(()=>{$("status").textContent="● API unavailable";$("model").textContent="Could not load models"});
+const $=id=>document.getElementById(id);let total=0,running=false;
+fetch("/api/models").then(r=>r.json()).then(d=>{const p=d.providers||[]; $("model").textContent=p.length?p.map(x=>x.provider+" · "+x.model).join(", "):"No model configured"; $("status").textContent=p.length?"● API online":"● API online · model missing"}).catch(()=>{$("status").textContent="● API unavailable";$("model").textContent="Could not load models"});
 function esc(v){return String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function add(x){
  total++;$("count").textContent=total+" event"+(total===1?"":"s");
@@ -34,8 +35,10 @@ function add(x){
  if(x.type==="agent.tool.call")body=x.tool+(x.input?"\n"+JSON.stringify(x.input,null,2):"");
  el.innerHTML='<div class="event-title"><span class="dot"></span>'+esc(title)+'</div><div class="event-body">'+esc(body)+'</div>';
  if(x.type==="agent.approval.required"){
-   const b=document.createElement("button");b.textContent="Approve action";
-   b.onclick=()=>approve(x.approvalId,b);el.appendChild(b)
+   const actions=document.createElement("div");actions.style.display="flex";actions.style.gap="8px";actions.style.flexWrap="wrap";
+   const yes=document.createElement("button");yes.textContent="Approve action";yes.onclick=()=>approve(x.approvalId,true,yes);
+   const no=document.createElement("button");no.textContent="Reject";no.style.borderColor="#6b3038";no.style.color="#ff9aa6";no.onclick=()=>approve(x.approvalId,false,no);
+   actions.append(yes,no);el.appendChild(actions)
  }
  $("events").appendChild(el);$("events").scrollTop=$("events").scrollHeight
 }
