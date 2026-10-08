@@ -16,15 +16,15 @@ main{width:min(1050px,100%);margin:auto;padding:24px 18px 48px}.top{display:flex
 <body>
 <main>
 <header class="top"><div class="brand"><div class="mark">V</div><div><div class="name">VELCLI</div><div class="sub">Autonomous Engineering Agent · VELCLAW</div></div></div><div class="status" id="status">● Checking API</div></header>
-<section class="hero"><div class="eyebrow">Engineering agent</div><h1>What are we building?</h1><p>Describe the outcome. VelCli can reason through a task, inspect the workspace, modify files, and execute approved terminal actions.</p></section>
+<section id="login" class="card" style="display:none;padding:16px;margin:18px 0"><div class="panel-head">Sign in to VelCli</div><p class="hint" style="padding:0 8px">Enter the administrator password configured in Render.</p><div class="composer"><input id="password" type="password" autocomplete="current-password" placeholder="Admin password" style="width:100%;padding:14px;border-radius:10px;background:#080b10;border:1px solid #293142;color:#fff"><div class="actions"><span id="loginError" class="hint"></span><button class="run" onclick="login()">Sign in</button></div></div></section><section class="hero"><div class="eyebrow">Engineering agent</div><h1>What are we building?</h1><p>Describe the outcome. VelCli can reason through a task, inspect the workspace, modify files, and execute approved terminal actions.</p></section>
 <section class="workspace">
-<div class="card"><div class="panel-head"><span>Workspace agent</span><span id="model" class="count">Checking model…</span></div><div class="composer"><textarea id="prompt" placeholder="Build a production-ready feature…"></textarea><div class="actions"><span class="hint">Agent actions that modify files or run commands require approval.</span><button id="run" class="run" onclick="runAgent()">Run Agent</button></div></div></div>
+<div class="card"><div class="panel-head"><span>Workspace agent</span><span id="model" class="count">Checking model…</span></div><div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap"><button class="run" onclick="loadHistory()">History</button><button class="run" onclick="createProject()">New project</button><button class="run" onclick="openPreview()">Live preview</button><button class="run" onclick="logout()">Sign out</button></div><div class="composer"><textarea id="prompt" placeholder="Build a production-ready feature…"></textarea><div class="actions"><span class="hint">Agent actions that modify files or run commands require approval.</span><button id="run" class="run" onclick="runAgent()">Run Agent</button></div></div></div>
 <div class="card"><div class="panel-head"><span>Agent timeline</span><span id="count" class="count">0 events</span></div><div id="events" class="events"><div class="empty">Events will appear here.</div></div></div>
 </section>
 </main>
 <script>
-const $=id=>document.getElementById(id);let total=0,running=false;
-fetch("/api/models").then(r=>r.json()).then(d=>{const p=d.providers||[]; $("model").textContent=p.length?p.map(x=>x.provider+" · "+x.model).join(", "):"No model configured"; $("status").textContent=p.length?"● API online":"● API online · model missing"}).catch(()=>{$("status").textContent="● API unavailable";$("model").textContent="Could not load models"});
+const $=id=>document.getElementById(id);let total=0,running=false,authenticated=false;
+fetch("/api/auth/status").then(r=>r.json()).then(a=>{if(!a.configured){$("login").style.display="block";$("loginError").textContent="Admin password is not configured in Render.";$("run").disabled=true}else if(!a.authenticated){$("login").style.display="block";$("run").disabled=true}else{authenticated=true}});fetch("/api/models").then(r=>r.json()).then(d=>{const p=d.providers||[]; $("model").textContent=p.length?p.map(x=>x.provider+" · "+x.model).join(", "):"No model configured"; $("status").textContent=p.length?"● API online":"● API online · model missing"}).catch(()=>{$("status").textContent="● API unavailable";$("model").textContent="Could not load models"});
 function esc(v){return String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function add(x){
  total++;$("count").textContent=total+" event"+(total===1?"":"s");
@@ -42,9 +42,14 @@ function add(x){
  }
  $("events").appendChild(el);$("events").scrollTop=$("events").scrollHeight
 }
+async function login(){try{const r=await fetch("/api/auth/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({password:$("password").value})});const d=await r.json();if(!r.ok)throw new Error(d.message||d.error||"Login failed");authenticated=true;$("login").style.display="none";$("run").disabled=false;loadHistory()}catch(e){$("loginError").textContent=e.message||String(e)}}
+async function logout(){await fetch("/api/auth/logout",{method:"POST"});authenticated=false;$("login").style.display="block";$("run").disabled=true}
+async function loadHistory(){const r=await fetch("/api/history");if(!r.ok)return;const d=await r.json();$("events").innerHTML="";total=0;for(const m of d.messages||[])add({type:"chat."+m.role,message:m.role.toUpperCase()+": "+m.content})}
+async function createProject(){const name=prompt("Project name");if(!name)return;const r=await fetch("/api/projects",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name})});const d=await r.json();alert(r.ok?"Project created: "+d.project.name:(d.error||"Failed"))}
+function openPreview(){window.open("/preview","_blank")}
 async function approve(id,approved,b){b.disabled=true;b.textContent=approved?"Approving…":"Rejecting…";try{const r=await fetch("/api/agent/approve",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({approvalId:id,approved})});if(!r.ok)throw new Error(await r.text());b.textContent=approved?"Approved":"Rejected"}catch(e){b.disabled=false;b.textContent="Retry"}}
 async function runAgent(){
- if(running)return;const prompt=$("prompt").value.trim();if(!prompt)return;
+ if(running||!authenticated)return;const prompt=$("prompt").value.trim();if(!prompt)return;
  running=true;$("run").disabled=true;$("run").textContent="Running…";$("events").innerHTML="";total=0;$("count").textContent="0 events";
  try{
   const res=await fetch("/api/agent/stream",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({prompt})});
