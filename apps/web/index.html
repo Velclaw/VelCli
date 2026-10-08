@@ -30,7 +30,7 @@ function add(x){
  const el=document.createElement("div");el.className="event"+(x.type==="agent.approval.required"?" approval":"");
  const title=x.type.replace("agent.","").replaceAll("."," · ");
  let body=x.message||x.error||x.tool||"";
- if(x.type==="agent.tool.result")body=typeof x.output==="string"?x.output:JSON.stringify(x.output,null,2);
+ if(x.type==="agent.tool.result"){body=typeof x.output==="string"?x.output:JSON.stringify(x.output,null,2);if(x.tool==="git.diff"&&x.output?.stdout)body=x.output.stdout;if((x.tool==="build.run"||x.tool==="test.run")&&x.output)body=JSON.stringify(x.output,null,2)}
  if(x.type==="agent.tool.call")body=x.tool+(x.input?"\n"+JSON.stringify(x.input,null,2):"");
  el.innerHTML='<div class="event-title"><span class="dot"></span>'+esc(title)+'</div><div class="event-body">'+esc(body)+'</div>';
  if(x.type==="agent.approval.required"){
