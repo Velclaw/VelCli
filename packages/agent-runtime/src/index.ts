@@ -62,7 +62,7 @@ export class AgentRuntime{
  private async decide(messages:import("../../model-router/src/index.js").ChatMessage[]){
    let lastError="";
    for(let attempt=1;attempt<=MAX_MODEL_RETRIES;attempt++){
-     try{return await this.model.chatWithTools(messages,(Object.keys(toolDescriptions) as ToolName[]).map(name=>({name,description:toolDescriptions[name],inputSchema:{type:"object",properties:{path:{type:"string"},content:{type:"string"},command:{type:"string"}},additionalProperties:true}}))));}
+     try{return await this.model.chatWithTools(messages,(Object.keys(toolDescriptions) as ToolName[]).map(name=>({name,description:toolDescriptions[name],inputSchema:{type:"object",properties:{path:{type:"string"},content:{type:"string"},command:{type:"string"}},additionalProperties:true}})));}
      catch(error){lastError=error instanceof Error?error.message:String(error);if(attempt<MAX_MODEL_RETRIES)await new Promise(r=>setTimeout(r,250*attempt));}
    }
    throw new Error(`Model decision failed after retries: ${lastError}`);
