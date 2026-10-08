@@ -6,6 +6,7 @@ import {randomUUID,createHash,timingSafeEqual} from "node:crypto";
 import {fileURLToPath} from "node:url";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
+import {Pool} from "pg";
 const exec=promisify(execFile);
 import {AgentRuntime} from "../../../packages/agent-runtime/src/index.js";
 import {getProviderStatus} from "../../../packages/model-router/src/index.js";
@@ -15,9 +16,24 @@ const port=Number(process.env.PORT||8787),webFile=path.resolve(path.dirname(file
 const dataDir=path.resolve(process.env.VELCLI_DATA_DIR||path.join(process.cwd(),"data")),workspacesDir=path.join(dataDir,"workspaces"),storeFile=path.join(dataDir,"store.json");
 const approvals=new Map<string,{resolve:(ok:boolean)=>void;timer:NodeJS.Timeout;sid:string}>(),sessions=new Map<string,{id:string;projectId?:string}>();
 type Store={history:Record<string,any[]>;projects:Record<string,any[]>};let store:Store={history:{},projects:{}};
+const pool=process.env.DATABASE_URL?new Pool({connectionString:process.env.DATABASE_URL,ssl:process.env.DATABASE_SSL==="disable"?false:{rejectUnauthorized:false},max:5,idleTimeoutMillis:30000,connectionTimeoutMillis:10000}):null;
 const COOKIE="velcli_session",MAX_BODY=1024*1024;
-async function load(){try{store=JSON.parse(await readFile(storeFile,"utf8"))}catch{await mkdir(dataDir,{recursive:true});await save()}}
-async function save(){await mkdir(dataDir,{recursive:true});await writeFile(storeFile,JSON.stringify(store,null,2))}
+async function load(){
+ if(pool){
+  await pool.query("CREATE TABLE IF NOT EXISTS velcli_store (key text PRIMARY KEY, value jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now())");
+  const result=await pool.query("SELECT key,value FROM velcli_store WHERE key IN ('history','projects')");
+  for(const row of result.rows){if(row.key==="history")store.history=row.value||{};if(row.key==="projects")store.projects=row.value||{}}
+  return;
+ }
+ try{store=JSON.parse(await readFile(storeFile,"utf8"))}catch{await mkdir(dataDir,{recursive:true});await save()}
+}
+async function save(){
+ if(pool){
+  await pool.query("INSERT INTO velcli_store(key,value,updated_at) VALUES ('history',$1::jsonb,now()),('projects',$2::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()",[JSON.stringify(store.history),JSON.stringify(store.projects)]);
+  return;
+ }
+ await mkdir(dataDir,{recursive:true});await writeFile(storeFile,JSON.stringify(store,null,2))
+}
 function headers(extra:Record<string,string>={}){return{"access-control-allow-origin":"same-origin","access-control-allow-methods":"GET,POST,PUT,DELETE,OPTIONS","access-control-allow-headers":"content-type","x-content-type-options":"nosniff","referrer-policy":"no-referrer","cache-control":"no-store",...extra}}
 function json(res:any,status:number,data:any,extra:Record<string,string>={}){res.writeHead(status,headers({"content-type":"application/json; charset=utf-8",...extra}));res.end(JSON.stringify(data))}
 function read(req:any){return new Promise<string>((resolve,reject)=>{let s="";req.on("data",(x:Buffer)=>{s+=x.toString();if(s.length>MAX_BODY){reject(new Error("Request body too large"));req.destroy()}});req.on("end",()=>resolve(s));req.on("error",reject)})}

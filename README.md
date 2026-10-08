@@ -15,8 +15,8 @@ VelCli is an early-stage autonomous engineering-agent platform. Current implemen
 - Configure `GEMINI_API_KEY` and `VELCLI_PROVIDER=gemini`.
 
 ## Important limitations
-- Filesystem metadata/workspaces are ephemeral on a default Render web service; restart/redeploy may lose data unless a persistent disk or external database is configured.
+- History and project metadata use Postgres when `DATABASE_URL` is configured; otherwise they fall back to a local JSON file. On Render Free, the local file and workspace files are ephemeral. Postgres does not persist generated workspace files; use a persistent disk or object storage for those.
 - Sessions are in-memory and expire on process restart. Login is a shared administrator password, not multi-user OAuth/RBAC.
 - Restricted commands are not a real OS/container sandbox. Do not run arbitrary untrusted workloads.
 - Static preview expects `index.html`; arbitrary framework dev servers and isolated per-project deployment URLs are not yet available.
-- GitHub clone/push, persistent database, multi-user identity, full IDE, host/hub/cloud orchestration, Termux pairing, and end-to-end production validation require additional implementation and tests.
+- GitHub clone/push, Postgres-backed history/project metadata (optional via `DATABASE_URL`), basic workspace file editing, active project isolation, multi-user identity, full IDE, real sandboxing, host/hub/cloud orchestration, Termux pairing, and end-to-end production validation have different levels of completion; see the configured environment and limitations above.
