@@ -1,1 +1,3 @@
-export type AgentEvent={type:string;runId:string;[key:string]:unknown};
+export type AgentEventType="agent.started"|"agent.thinking"|"agent.tool.call"|"agent.tool.result"|"agent.approval.required"|"agent.approval.resolved"|"agent.file.changed"|"agent.completed"|"agent.error";
+export type AgentEvent={type:AgentEventType;runId:string;step?:number;message?:string;tool?:string;input?:unknown;output?:unknown;path?:string;approvalId?:string;command?:string;error?:string;[key:string]:unknown};
+export type ApprovalRequest={id:string;runId:string;tool:string;input:unknown;reason:string};
