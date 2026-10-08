@@ -1,0 +1,10 @@
+{
+  "name":"velcli",
+  "version":"0.1.0",
+  "private":true,
+  "description":"VelCli — next-generation autonomous engineering agent by Velclaw",
+  "type":"module",
+  "scripts":{"dev":"tsx apps/api/src/index.ts","check":"tsc --noEmit"},
+  "dependencies":{"dotenv":"^16.4.7","openai":"^5.12.0"},
+  "devDependencies":{"tsx":"^4.20.3","typescript":"^5.8.3","@types/node":"^22.15.0"}
+}
