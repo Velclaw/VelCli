@@ -15,15 +15,15 @@ main{width:min(1050px,100%);margin:auto;padding:24px 18px 48px}.top{display:flex
 </head>
 <body>
 <main>
-<header class="top"><div class="brand"><div class="mark">V</div><div><div class="name">VELCLI</div><div class="sub">Autonomous Engineering Agent · VELCLAW</div></div></div><div class="status">● Online</div></header>
+<header class="top"><div class="brand"><div class="mark">V</div><div><div class="name">VELCLI</div><div class="sub">Autonomous Engineering Agent · VELCLAW</div></div></div><div class="status" id="status">● Checking API</div></header>
 <section class="hero"><div class="eyebrow">Engineering agent</div><h1>What are we building?</h1><p>Describe the outcome. VelCli can reason through a task, inspect the workspace, modify files, and execute approved terminal actions.</p></section>
 <section class="workspace">
-<div class="card"><div class="composer"><textarea id="prompt" placeholder="Build a production-ready feature…"></textarea><div class="actions"><span class="hint">Agent actions that modify files or run commands require approval.</span><button id="run" class="run" onclick="runAgent()">Run Agent</button></div></div></div>
+<div class="card"><div class="panel-head"><span>Workspace agent</span><span id="model" class="count">Checking model…</span></div><div class="composer"><textarea id="prompt" placeholder="Build a production-ready feature…"></textarea><div class="actions"><span class="hint">Agent actions that modify files or run commands require approval.</span><button id="run" class="run" onclick="runAgent()">Run Agent</button></div></div></div>
 <div class="card"><div class="panel-head"><span>Agent timeline</span><span id="count" class="count">0 events</span></div><div id="events" class="events"><div class="empty">Events will appear here.</div></div></div>
 </section>
 </main>
 <script>
-const $=id=>document.getElementById(id);let total=0,running=false;
+const $=id=>document.getElementById(id);let total=0,running=false;\nfetch("/api/models").then(r=>r.json()).then(d=>{const p=d.providers||[]; $("model").textContent=p.length?p.map(x=>x.provider+" · "+x.model).join(", "):"No model configured"; $("status").textContent=p.length?"● API online":"● API online · model missing"}).catch(()=>{$("status").textContent="● API unavailable";$("model").textContent="Could not load models"});
 function esc(v){return String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function add(x){
  total++;$("count").textContent=total+" event"+(total===1?"":"s");
@@ -39,7 +39,7 @@ function add(x){
  }
  $("events").appendChild(el);$("events").scrollTop=$("events").scrollHeight
 }
-async function approve(id,b){b.disabled=true;b.textContent="Approving…";try{await fetch("/api/agent/approve",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({approvalId:id,approved:true})});b.textContent="Approved"}catch(e){b.disabled=false;b.textContent="Retry approval"}}
+async function approve(id,approved,b){b.disabled=true;b.textContent=approved?"Approving…":"Rejecting…";try{const r=await fetch("/api/agent/approve",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({approvalId:id,approved})});if(!r.ok)throw new Error(await r.text());b.textContent=approved?"Approved":"Rejected"}catch(e){b.disabled=false;b.textContent="Retry"}}
 async function runAgent(){
  if(running)return;const prompt=$("prompt").value.trim();if(!prompt)return;
  running=true;$("run").disabled=true;$("run").textContent="Running…";$("events").innerHTML="";total=0;$("count").textContent="0 events";
