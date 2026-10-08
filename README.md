@@ -37,3 +37,16 @@ npm run dev
 ```
 
 VelCli is being built toward Agent, IDE, Review, Design, Build, Deploy, Host, Hub, Cloud and Termux surfaces under Velclaw.
+
+## Engineering loop
+
+The agent runtime now exposes workspace engineering tools:
+
+- `git.status` — inspect repository state
+- `git.diff` — inspect current changes
+- `build.run` — run the project build
+- `test.run` — run the project test command
+- `fs.read`, `fs.list`, `fs.write` — workspace file operations
+- `terminal.exec` — controlled terminal execution
+
+Mutating and execution tools require an approval decision in the Studio. The Studio receives agent events over Server-Sent Events and displays tool results, approvals, file changes, Git output, and build/test results.
