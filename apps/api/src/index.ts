@@ -1,0 +1,5 @@
+import "dotenv/config";import {createServer} from "node:http";import {VelCliAgent} from "../../../packages/agent-core/src/index.js";
+const port=Number(process.env.PORT||8787);
+const json=(r:any,s:number,d:any)=>{r.writeHead(s,{"content-type":"application/json","access-control-allow-origin":"*"});r.end(JSON.stringify(d))};
+const read=(q:any)=>new Promise<string>((ok,bad)=>{let s="";q.on("data",(x:any)=>s+=x);q.on("end",()=>ok(s));q.on("error",bad)});
+createServer(async(req,res)=>{if(req.url==="/health")return json(res,200,{ok:true,service:"velcli"});if(req.url==="/" )return json(res,200,{name:"VelCli",by:"Velclaw"});if(req.method==="POST"&&req.url==="/api/agent")try{const b=JSON.parse(await read(req));const events:any[]=[];const a=new VelCliAgent(e=>events.push(e));const out=await a.run(String(b.prompt||""));return json(res,200,{...out,events})}catch(e){return json(res,500,{error:e instanceof Error?e.message:String(e)})}json(res,404,{error:"not_found"})}).listen(port,()=>console.log(`VelCli API :${port}`));
