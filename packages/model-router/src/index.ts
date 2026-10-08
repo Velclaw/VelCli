@@ -1,4 +1,7 @@
-export type ChatMessage={role:"system"|"user"|"assistant"|"tool";content:string};
+export type ChatMessage={role:"system"|"user"|"assistant"|"tool";content:string;tool_call_id?:string;tool_calls?:ModelToolCall[]};
+export type ModelTool={name:string;description:string;inputSchema:Record<string,unknown>};
+export type ModelToolCall={id:string;name:string;input:Record<string,unknown>};
+export type ModelResponse={content:string;toolCalls:ModelToolCall[]};
 
 export type ProviderName="openai"|"anthropic"|"gemini"|"groq"|"openrouter"|"compatible";
 export type ProviderConfig={provider:ProviderName;apiKey:string;model:string;baseUrl?:string};
@@ -25,20 +28,26 @@ export class ModelRouter{
   this.c=found;
  }
  get config():ProviderConfig{return{...this.c,apiKey:this.c.apiKey?"configured":""} as ProviderConfig;}
- async chat(messages:ChatMessage[]){if(this.c.provider==="anthropic")return this.chatAnthropic(messages);return this.chatOpenAICompatible(messages);}
- private async chatOpenAICompatible(messages:ChatMessage[]){
-  const r=await fetch(this.c.baseUrl!.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"content-type":"application/json",authorization:`Bearer ${this.c.apiKey}`},body:JSON.stringify({model:this.c.model,messages,temperature:.2})});
+ async chat(messages:ChatMessage[]){return(await this.chatWithTools(messages,[])).content;}
+ async chatWithTools(messages:ChatMessage[],toolDefs:ModelTool[]):Promise<ModelResponse>{if(this.c.provider==="anthropic")return this.chatAnthropic(messages,toolDefs);return this.chatOpenAICompatible(messages,toolDefs);}
+ private async chatOpenAICompatible(messages:ChatMessage[],toolDefs:ModelTool[]):Promise<ModelResponse>{
+  const payload:any={model:this.c.model,messages,temperature:.2};
+  if(toolDefs.length)payload.tools=toolDefs.map(t=>({type:"function",function:{name:t.name,description:t.description,parameters:t.inputSchema}}));
+  const r=await fetch(this.c.baseUrl!.replace(/\/$/,"")+"/chat/completions",{method:"POST",headers:{"content-type":"application/json",authorization:`Bearer ${this.c.apiKey}`},body:JSON.stringify(payload)});
   if(!r.ok)throw new Error(`Model request failed: ${r.status} ${await r.text()}`);
-  const j=await r.json() as any;
-  return String(j.choices?.[0]?.message?.content||"");
+  const j=await r.json() as any;const message=j.choices?.[0]?.message||{};
+  const toolCalls=Array.isArray(message.tool_calls)?message.tool_calls.map((x:any)=>({id:String(x.id),name:String(x.function?.name||""),input:(()=>{try{return typeof x.function?.arguments==="string"?JSON.parse(x.function.arguments||"{}"):x.function?.arguments||{}}catch{return{}}})()})).filter((x:any)=>x.name):[];
+  return{content:String(message.content||""),toolCalls};
  }
- private async chatAnthropic(messages:ChatMessage[]){
+ private async chatAnthropic(messages:ChatMessage[],toolDefs:ModelTool[]):Promise<ModelResponse>{
   const system=messages.filter(x=>x.role==="system").map(x=>x.content).join("\n");
   const userMessages=messages.filter(x=>x.role!=="system").map(x=>({role:x.role==="assistant"?"assistant":"user",content:x.content}));
-  const r=await fetch(this.c.baseUrl!.replace(/\/$/,"")+"/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":this.c.apiKey,"anthropic-version":"2023-06-01"},body:JSON.stringify({model:this.c.model,max_tokens:4096,system:system||undefined,messages:userMessages,temperature:.2})});
+  const payload:any={model:this.c.model,max_tokens:4096,system:system||undefined,messages:userMessages,temperature:.2};
+  if(toolDefs.length)payload.tools=toolDefs.map(t=>({name:t.name,description:t.description,input_schema:t.inputSchema}));
+  const r=await fetch(this.c.baseUrl!.replace(/\/$/,"")+"/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":this.c.apiKey,"anthropic-version":"2023-06-01"},body:JSON.stringify(payload)});
   if(!r.ok)throw new Error(`Anthropic request failed: ${r.status} ${await r.text()}`);
-  const j=await r.json() as any;
-  return Array.isArray(j.content)?j.content.filter((x:any)=>x.type==="text").map((x:any)=>x.text).join("\n"):"";
+  const j=await r.json() as any;const blocks=Array.isArray(j.content)?j.content:[];
+  return{content:blocks.filter((x:any)=>x.type==="text").map((x:any)=>x.text).join("\n"),toolCalls:blocks.filter((x:any)=>x.type==="tool_use").map((x:any)=>({id:String(x.id),name:String(x.name),input:(x.input||{}) as Record<string,unknown>}))};
  }
 }
 
