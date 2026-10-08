@@ -12,7 +12,7 @@ export class AgentRuntime{
    for(let step=0;step<8;step++){
      emit({type:"agent.thinking",runId,step:step+1,message:`Planning step ${step+1}`});
      const answer=await this.model.chat([
-       {role:"system",content:`You are VelCli, an autonomous engineering agent by Velclaw. Use ONLY JSON. Tool call: {"tool":"fs.read|fs.write|fs.list|terminal.exec","input":{...}}. Finish: {"final":"..."}. Never claim a tool ran unless its result is in Context.`},
+       {role:"system",content:`You are VelCli, an autonomous engineering agent by Velclaw. Use ONLY JSON. Tool call: {"tool":"fs.read|fs.write|fs.list|git.status|git.diff|build.run|test.run|terminal.exec","input":{...}}. Finish: {"final":"..."}. Never claim a tool ran unless its result is in Context.`},
        {role:"user",content:prompt+"\nContext:\n"+context}
      ]);
      let parsed:any;try{parsed=JSON.parse(answer)}catch{emit({type:"agent.completed",runId,message:answer});return{runId,message:answer}};
