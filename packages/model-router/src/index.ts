@@ -41,7 +41,25 @@ export class ModelRouter{
  }
  private async chatAnthropic(messages:ChatMessage[],toolDefs:ModelTool[]):Promise<ModelResponse>{
   const system=messages.filter(x=>x.role==="system").map(x=>x.content).join("\n");
-  const userMessages=messages.filter(x=>x.role!=="system").map(x=>({role:x.role==="assistant"?"assistant":"user",content:x.content}));
+  const userMessages:Array<{role:"user"|"assistant";content:string|Array<Record<string,unknown>>}>=[];
+  for(const m of messages){
+   if(m.role==="system")continue;
+   if(m.role==="assistant"){
+    const content:Array<Record<string,unknown>>=[];
+    if(m.content)content.push({type:"text",text:m.content});
+    for(const call of m.tool_calls||[])content.push({type:"tool_use",id:call.id,name:call.name,input:call.input||{}});
+    userMessages.push({role:"assistant",content:content.length?content:m.content});
+    continue;
+   }
+   if(m.role==="tool"){
+    const result={type:"tool_result",tool_use_id:m.tool_call_id||"",content:m.content};
+    const last=userMessages[userMessages.length-1];
+    if(last?.role==="user"&&Array.isArray(last.content))last.content.push(result);
+    else userMessages.push({role:"user",content:[result]});
+    continue;
+   }
+   userMessages.push({role:"user",content:m.content});
+  }
   const payload:any={model:this.c.model,max_tokens:4096,system:system||undefined,messages:userMessages,temperature:.2};
   if(toolDefs.length)payload.tools=toolDefs.map(t=>({name:t.name,description:t.description,input_schema:t.inputSchema}));
   const r=await fetch(this.c.baseUrl!.replace(/\/$/,"")+"/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":this.c.apiKey,"anthropic-version":"2023-06-01"},body:JSON.stringify(payload)});
