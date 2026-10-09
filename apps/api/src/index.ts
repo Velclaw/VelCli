@@ -1,6 +1,6 @@
 import "dotenv/config";
 import {createServer} from "node:http";
-import {readFile,writeFile,mkdir,readdir,stat} from "node:fs/promises";
+import {readFile,writeFile,mkdir,readdir,stat,rename} from "node:fs/promises";
 import path from "node:path";
 import {randomUUID,createHash,timingSafeEqual} from "node:crypto";
 import {fileURLToPath} from "node:url";
@@ -35,7 +35,7 @@ async function save(){
   await pool.query("INSERT INTO velcli_store(key,value,updated_at) VALUES ('history',$1::jsonb,now()),('projects',$2::jsonb,now()),('activeProjects',$3::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()",[JSON.stringify(store.history),JSON.stringify(store.projects),JSON.stringify(store.activeProjects)]);
   return;
  }
- await mkdir(dataDir,{recursive:true});await writeFile(storeFile,JSON.stringify(store,null,2))
+ await mkdir(dataDir,{recursive:true});const tmp=storeFile+"."+randomUUID()+".tmp";await writeFile(tmp,JSON.stringify(store,null,2),"utf8");await rename(tmp,storeFile)
 }
 function headers(extra:Record<string,string>={}){return{"access-control-allow-origin":"same-origin","access-control-allow-methods":"GET,POST,PUT,DELETE,OPTIONS","access-control-allow-headers":"content-type","x-content-type-options":"nosniff","referrer-policy":"no-referrer","cache-control":"no-store",...extra}}
 function json(res:any,status:number,data:any,extra:Record<string,string>={}){res.writeHead(status,headers({"content-type":"application/json; charset=utf-8",...extra}));res.end(JSON.stringify(data))}
@@ -92,6 +92,7 @@ const server=createServer(async(req,res)=>{try{
  return json(res,404,{error:"not_found"});
  }catch(e){if(!res.headersSent)json(res,e instanceof SyntaxError?400:500,{error:e instanceof Error?e.message:String(e)});else if(!res.writableEnded)res.end()}});
 async function start(){
+ if(!pool)console.warn("DATABASE_URL is not configured: VelCli data is stored on the service filesystem and may be lost when the service restarts or redeploys.");
  await load();
  await mkdir(workspacesDir,{recursive:true});
  server.listen(port,()=>console.log("VelCli API listening on :"+port));
