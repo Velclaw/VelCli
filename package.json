@@ -8,7 +8,8 @@
     "dev": "tsx apps/api/src/index.ts",
     "check": "tsc --noEmit",
     "build": "tsc",
-    "test": "npm run check"
+    "test": "npm run check",
+    "start": "node dist/apps/api/src/index.js"
   },
   "dependencies": {
     "@types/node": "^22.15.0",
