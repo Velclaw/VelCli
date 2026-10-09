@@ -1,0 +1,9 @@
+addEventListener('fetch', (event) => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  return fetch(request, {
+    cf: { resolveOverride: 'base-domain-origin.example.com' },
+  })
+}
