@@ -103,6 +103,69 @@ button,.btn,.quick,.nav button,.hamb,.lang,.avatar,.outline,.topactions button,.
 button:hover,.btn:hover,.quick:hover{transform:none!important}
 *{box-shadow:none!important;text-shadow:none!important}
 
+
+/* Minimalist redesign: Recent Projects through footer */
+#projectsSection{margin-top:34px}
+#projectsSection .head,#agentSection .head,#editorSection .head,main>section:last-child .head{margin:0 0 14px;padding:0 0 12px;border-bottom:1px solid #262626;align-items:flex-end}
+#projectsSection .title,#agentSection .title,#editorSection .title,main>section:last-child .title{font-size:13px;font-weight:600;letter-spacing:.01em;color:#f4f4f4}
+#projectsSection .sub,#agentSection .sub,#editorSection .sub,main>section:last-child .sub{font-size:11px;color:#777;line-height:1.6}
+#projectsSection .projects,#agentSection .projects,#editorSection .projects,main>section:last-child .projects{background:#000;border:1px solid #292929}
+#projectsSection .table th{background:#080808;color:#777;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #292929}
+#projectsSection .table td{background:#000;color:#c8c8c8;border-bottom:1px solid #1d1d1d;font-size:11px}
+#projectsSection .picon{background:#080808;color:#ddd;border:1px solid #333}
+#projectsSection .pname b{font-size:11px;font-weight:500;color:#eee}
+#projectsSection .pname small{color:#666}
+#projectsSection .state{background:#080808;color:#ccc;border:1px solid #333;font-size:9px;padding:4px 7px}
+#projectsSection .empty{padding:26px 12px!important;color:#777}
+#agentSection,#editorSection,main>section:last-child{margin-top:34px}
+#agentSection .eyebrow{font-size:10px;padding:5px 8px;border:1px solid #333;background:#050505;color:#aaa}
+#agentSection .projects{padding:16px!important}
+#agentSection .field label,#editorSection .field label{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#888}
+#agentSection textarea,#editorSection input,#editorSection textarea{border:1px solid #303030!important;background:#030303!important;color:#eee!important;padding:13px!important;line-height:1.7}
+#agentSection textarea{min-height:128px!important}
+#agentSection .actions small{font-size:10px;color:#666!important;line-height:1.6}
+#agentSection .btn.primary,#editorSection .btn.primary{background:#eee!important;color:#000!important;border:1px solid #eee!important;font-weight:600}
+#agentSection .btn,#editorSection .btn,main>section:last-child .btn{border:1px solid #333;background:#050505;color:#ddd;padding:9px 12px;font-size:10px;font-weight:500}
+#agentSection .btn:hover,#editorSection .btn:hover,main>section:last-child .btn:hover{background:#171717;color:#fff;border-color:#666}
+#agentSection .head[style]{border:0;margin:0;padding:0}
+#agentSection #events .activity,#agentSection #activityList .activity{padding:12px 0;border-top:1px solid #202020}
+#agentSection .aicon{background:#080808;color:#ddd;border:1px solid #333}
+#editorSection .projects{padding:16px!important}
+#editorSection #fileList .btn{width:100%;overflow-wrap:anywhere}
+main>section:last-child .actions{gap:0;border:1px solid #292929;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+main>section:last-child .btn{min-height:42px;justify-content:flex-start;border:0;border-right:1px solid #292929;border-bottom:1px solid #292929}
+main>section:last-child .btn:nth-child(4n){border-right:0}
+main>section:last-child .btn:nth-last-child(-n+4){border-bottom:0}
+.right{background:#000!important;border-left:0!important;padding-top:0!important;align-content:start}
+.right .rail{background:#000;border:1px solid #292929;margin:0}
+.right .railhead{background:#050505;color:#ddd;font-size:11px;font-weight:600;border-bottom:1px solid #292929;padding:13px}
+.right .health{color:#bbb!important;font-size:10px;padding:12px 13px}
+.right .service,.right .activity,.right .linkrow{border-top:1px solid #202020;color:#aaa;font-size:10px;padding:10px 12px}
+.right .sicon,.right .aicon{background:#050505;border:1px solid #333;color:#ccc}
+.right .sstate,.right .sname,.right .acopy small{color:#888;font-size:10px}
+.right .acopy b{color:#ddd;font-size:10px;font-weight:500}
+.right .empty{color:#666;font-size:10px}
+.foot{min-height:40px;border-top:1px solid #292929;background:#000;color:#777}
+.footbrand{font-size:11px!important;letter-spacing:.12em;color:#eee}
+.foot .social{font-size:12px;color:#888}
+.foot .social a:hover{color:#fff}
+@media(max-width:760px){
+ #projectsSection,#agentSection,#editorSection,main>section:last-child{margin-top:26px}
+ #projectsSection .head,#agentSection .head,#editorSection .head,main>section:last-child .head{align-items:flex-start}
+ #projectsSection .head>.btn{padding:7px;font-size:9px}
+ #projectsSection .table th,#projectsSection .table td{padding:10px 7px}
+ #projectsSection .table th:nth-child(3),#projectsSection .table td:nth-child(3){display:none}
+ #agentSection .projects,#editorSection .projects{padding:11px!important}
+ #editorSection .projects>div{grid-template-columns:1fr!important}
+ #editorSection #fileList{grid-template-columns:repeat(2,minmax(0,1fr));max-height:160px!important}
+ main>section:last-child .actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+ main>section:last-child .btn:nth-child(4n){border-right:1px solid #292929}
+ main>section:last-child .btn:nth-child(2n){border-right:0}
+ main>section:last-child .btn:nth-last-child(-n+4){border-bottom:1px solid #292929}
+ main>section:last-child .btn:nth-last-child(-n+2){border-bottom:0}
+ .right{padding:0 12px 22px!important}
+}
+
 </style>
 </head>
 <body><div class="app"><header class="top"><button class="hamb" onclick="toggleSidebar()">☰</button><a class="brand" href="#" onclick="goHome();return false"><span class="mark" aria-hidden="true">V</span><span class="name">VELCLI</span></a><label class="search">⌕ <input id="globalSearch" placeholder="Tìm kiếm dự án, tài liệu, công cụ..."><span class="key">/</span></label><div class="topactions"><a class="github" href="https://github.com/Velclaw/VelCli" target="_blank">GitHub ↗</a><span class="topdivider">│</span><button onclick="toast('VelCli đang dùng giao diện tối.')">☼</button><button onclick="toast('Chưa có thông báo mới.')">♧</button><button class="lang" onclick="toast('Ngôn ngữ: Tiếng Việt')">VI⌄</button><button class="avatar" onclick="logout()">◉</button></div></header>
