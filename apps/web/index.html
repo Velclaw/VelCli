@@ -13,6 +13,48 @@
 @media(max-width:700px){.app{grid-template-rows:60px 1fr 46px}.top{padding:0 13px;gap:10px}.brand{min-width:0;gap:8px}.mark{width:34px;height:34px;border-radius:11px;font-size:21px}.name{font-size:17px}.search,.github,.topdivider,.lang{display:none}.hamb{display:inline-flex!important;align-items:center;justify-content:center;width:35px;height:35px;border:1px solid #29354b!important;border-radius:10px;background:#121a28!important;color:#e4e9f8!important}.body{display:block}.sidebar{position:fixed;z-index:40;top:60px;bottom:46px;left:0;width:min(300px,86vw);transform:translateX(-110%);transition:transform .22s;overflow:auto;box-shadow:15px 0 45px #0005}.sidebar.open{transform:translateX(0)}.main{padding:14px 12px 25px;overflow:visible}.crumb{margin-bottom:13px}.hero{min-height:365px;padding:23px 19px;align-items:flex-start;border-radius:20px}.hero h1{font-size:37px;max-width:320px}.hero p{max-width:340px;font-size:12px;line-height:1.75}.art{width:116px;height:116px;right:17px;top:auto;bottom:12px;transform:none;font-size:80px;border-radius:28px;opacity:.45}.hero .copy{max-width:100%}.hero .actions{max-width:260px}.quickgrid{gap:9px}.quick{padding:12px;min-height:135px;border-radius:14px}.qicon{width:37px;height:37px;border-radius:11px;margin-bottom:11px}.head{margin:23px 0 12px}.table th,.table td{padding:9px 7px}.table th:nth-child(3),.table td:nth-child(3){display:none}.pname{gap:7px}.picon{width:29px;height:29px}.state{font-size:9px;padding:5px 7px}.foot{padding:0 13px}.footbrand{font-size:13px}.tagline,.foot>span{display:none}.social{gap:14px;font-size:14px}.projects{border-radius:14px}.modal,.loginbox{padding:20px;border-radius:17px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
 
+
+/* Dashboard layout refresh: preserve the established VelCli visual identity */
+:root{--radius:12px}
+body{background:var(--bg);letter-spacing:0}
+.app{grid-template-rows:64px 1fr 44px}
+.top{padding:0 24px;background:var(--bg);backdrop-filter:blur(16px);gap:18px}
+.brand{min-width:205px}.mark{border-radius:10px;box-shadow:none}.name{letter-spacing:.12em}
+.search{max-width:560px;border-radius:9px;background:#0d121d;height:38px}
+.body{grid-template-columns:232px minmax(0,1fr);max-width:1800px}
+.sidebar{position:sticky;top:64px;height:calc(100vh - 108px);overflow-y:auto;padding:20px 12px;background:var(--bg);border-right:1px solid var(--line)}
+.nav{gap:3px}.nav button{border-radius:9px;padding:9px 11px}.nav button span{border-radius:7px}
+.brandcard{border-radius:11px;padding:13px;background:var(--panel);border-color:var(--line)}
+.brandcard .mark{background:#191d31;border-color:#353b5b}
+.main{grid-column:2;padding:26px clamp(18px,3vw,42px) 40px;max-width:1500px;width:100%;margin:0 auto;overflow:visible}
+.crumb{margin:0 0 18px;color:var(--muted);font-weight:600}
+.hero{min-height:0;padding:30px 32px;border-radius:14px;border:1px solid var(--line);background:var(--panel);box-shadow:none}
+.hero:before{background-size:28px 28px;opacity:.45}
+.hero:after{display:none}
+.hero h1{font-size:clamp(32px,3vw,44px);letter-spacing:-.04em;line-height:1.08;margin:15px 0 10px}
+.hero p{max-width:510px;margin-bottom:18px}
+.eyebrow{border-radius:7px;letter-spacing:.08em}
+.art{width:174px;height:174px;right:7%;border-radius:28px;rotate:0deg;background:#101725;border-color:#303956;box-shadow:none;text-shadow:none;font-size:112px;color:#c2bbff;opacity:.9}
+.btn{border-radius:9px;padding:10px 13px}
+.btn.primary{background:var(--purple);box-shadow:none}
+.head{margin:26px 0 12px}
+.title{font-size:14px}.sub{font-size:12px}
+.quickgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.quick{min-height:132px;padding:14px;border-radius:12px;background:var(--panel);border-color:var(--line);box-shadow:none}
+.quick:after{display:none}.quick:hover{box-shadow:none}
+.qicon{width:36px;height:36px;border-radius:9px;margin-bottom:12px;background:#171b2d;border-color:#343957}
+.projects,.rail{border-radius:12px;background:var(--panel);border-color:var(--line)}
+.table th{background:#101522}.table td{padding:12px}
+.picon{border-radius:8px}.state{border-radius:6px}
+.right{grid-column:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:0 clamp(18px,3vw,42px) 28px;border:0;background:transparent}
+.rail{margin:0;min-width:0}.railhead{padding:13px 14px}
+.service{padding:9px 12px}.sicon,.aicon{border-radius:8px}
+.linkrow{padding:10px 13px}
+.foot{padding:0 22px;background:var(--bg)}
+.footbrand{font-size:13px}
+@media(max-width:1180px){.body{grid-template-columns:215px minmax(0,1fr)}.right{grid-template-columns:repeat(2,minmax(0,1fr))}.quickgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.art{width:140px;height:140px;font-size:92px;right:4%}.copy{max-width:68%}}
+@media(max-width:760px){.app{grid-template-rows:58px 1fr 42px}.top{padding:0 12px;gap:10px}.brand{min-width:0}.name{font-size:16px}.body{display:block}.sidebar{position:fixed;top:58px;bottom:42px;height:auto;left:0;width:min(290px,86vw);transform:translateX(-110%);transition:transform .2s;z-index:40;box-shadow:12px 0 35px #0004}.sidebar.open{transform:translateX(0)}.main{padding:15px 12px 24px}.hero{padding:22px 18px;min-height:320px;border-radius:12px}.hero h1{font-size:35px}.hero p{font-size:12px}.art{width:96px;height:96px;right:15px;bottom:14px;top:auto;transform:none;font-size:64px;opacity:.35;border-radius:20px}.copy{max-width:100%}.hero .actions{max-width:280px}.quickgrid{gap:8px}.quick{padding:12px;min-height:126px}.right{display:grid;grid-template-columns:minmax(0,1fr);padding:0 12px 22px;gap:10px}.right .rail:nth-child(2),.right .rail:nth-child(3){display:none}.foot{padding:0 12px}.tagline,.foot>span{display:none}}
+
 </style>
 </head>
 <body><div class="app"><header class="top"><button class="hamb" onclick="toggleSidebar()">☰</button><a class="brand" href="#" onclick="goHome();return false"><span class="mark" aria-hidden="true">V</span><span class="name">VELCLI</span></a><label class="search">⌕ <input id="globalSearch" placeholder="Tìm kiếm dự án, tài liệu, công cụ..."><span class="key">/</span></label><div class="topactions"><a class="github" href="https://github.com/Velclaw/VelCli" target="_blank">GitHub ↗</a><span class="topdivider">│</span><button onclick="toast('VelCli đang dùng giao diện tối.')">☼</button><button onclick="toast('Chưa có thông báo mới.')">♧</button><button class="lang" onclick="toast('Ngôn ngữ: Tiếng Việt')">VI⌄</button><button class="avatar" onclick="logout()">◉</button></div></header>
