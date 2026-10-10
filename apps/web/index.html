@@ -55,6 +55,45 @@ body{background:var(--bg);letter-spacing:0}
 @media(max-width:1180px){.body{grid-template-columns:215px minmax(0,1fr)}.right{grid-template-columns:repeat(2,minmax(0,1fr))}.quickgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.art{width:140px;height:140px;font-size:92px;right:4%}.copy{max-width:68%}}
 @media(max-width:760px){.app{grid-template-rows:58px 1fr 42px}.top{padding:0 12px;gap:10px}.brand{min-width:0}.name{font-size:16px}.body{display:block}.sidebar{position:fixed;top:58px;bottom:42px;height:auto;left:0;width:min(290px,86vw);transform:translateX(-110%);transition:transform .2s;z-index:40;box-shadow:12px 0 35px #0004}.sidebar.open{transform:translateX(0)}.main{padding:15px 12px 24px}.hero{padding:22px 18px;min-height:320px;border-radius:12px}.hero h1{font-size:35px}.hero p{font-size:12px}.art{width:96px;height:96px;right:15px;bottom:14px;top:auto;transform:none;font-size:64px;opacity:.35;border-radius:20px}.copy{max-width:100%}.hero .actions{max-width:280px}.quickgrid{gap:8px}.quick{padding:12px;min-height:126px}.right{display:grid;grid-template-columns:minmax(0,1fr);padding:0 12px 22px;gap:10px}.right .rail:nth-child(2),.right .rail:nth-child(3){display:none}.foot{padding:0 12px}.tagline,.foot>span{display:none}}
 
+
+/* Black, square-corner engineering UI */
+:root{--bg:#000;--panel:#050505;--panel2:#0a0a0a;--line:#292929;--text:#f5f5f5;--muted:#999;--purple:#aaa;--blue:#ddd;--mint:#ddd;--radius:0}
+html,body{background:#000!important;color:#f5f5f5!important}
+*{border-radius:0!important;box-shadow:none!important;text-shadow:none!important}
+.app{background:#000;grid-template-rows:60px 1fr 40px}
+.top{height:60px;background:#000;border-bottom:1px solid #292929;backdrop-filter:none;padding:0 20px}
+.mark{background:#fff!important;color:#000!important;border:0!important}
+.body{grid-template-columns:220px minmax(0,1fr);max-width:none;background:#000}
+.sidebar{position:sticky;top:60px;height:calc(100vh - 100px);overflow:auto;background:#000;border-right:1px solid #292929;padding:20px 12px}
+.nav{gap:2px}.nav button{background:#000;color:#aaa;padding:10px 11px}.nav button.active{background:#171717;border-color:#444;color:#fff;box-shadow:inset 2px 0 #fff!important}.nav button span{background:#090909;color:#ddd}
+.brandcard{background:#050505;border:1px solid #333}
+.main{grid-column:2;grid-row:1;padding:24px clamp(16px,3vw,42px) 36px;max-width:1600px;width:100%;margin:auto;overflow:visible}
+.crumb{color:#aaa}
+.hero{min-height:330px;padding:34px;border:1px solid #333;background:#050505}
+.hero:before{background-image:linear-gradient(#fff1 1px,transparent 1px),linear-gradient(90deg,#fff1 1px,transparent 1px);background-size:24px 24px;opacity:.5}
+.hero:after{display:none}
+.eyebrow{border:1px solid #555;background:#111;color:#ddd}
+.hero h1{font-size:clamp(34px,4vw,54px);line-height:1.02;letter-spacing:-.055em}
+.gradient{background:none;color:#fff}.hero p{color:#aaa}
+.btn{background:#080808;border:1px solid #444;color:#eee}.btn:hover{background:#171717;border-color:#888}
+.btn.primary{background:#f5f5f5;color:#000;border-color:#fff}.btn.primary:hover{background:#ccc}
+.art{right:4%;width:245px;height:220px;top:50%;transform:translateY(-50%);border:1px solid #444;background:#080808;color:transparent;font-size:0;rotate:0;overflow:hidden}
+.art:before{content:"";position:absolute;inset:0;background-image:url('https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif');background-size:cover;background-position:center;filter:grayscale(1) contrast(1.15);opacity:.9}
+.art:after{content:"";position:absolute;inset:0;border:1px solid #444;background:linear-gradient(90deg,#05050555,transparent 45%)}
+.head{margin:26px 0 12px}.sub{color:#999}
+.quickgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid #292929}
+.quick{min-height:135px;padding:15px;background:#000;border:0;border-right:1px solid #292929}
+.quick:last-child{border-right:0}.quick:hover{background:#111}
+.qicon{background:#111!important;border:1px solid #444!important;color:#eee!important}
+.quick small{color:#999}.projects,.rail{background:#000;border:1px solid #292929}
+.table th{background:#090909}.table td{border-color:#242424}
+.right{grid-column:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:0 clamp(16px,3vw,42px) 28px;background:#000}
+.rail{margin:0;min-width:0}.railhead{padding:13px 14px;border-bottom:1px solid #292929}
+.service,.linkrow{border-color:#222}.sicon,.aicon{background:#111;border:1px solid #333}
+.foot{background:#000;border-top:1px solid #292929}
+@media(max-width:1120px){.body{grid-template-columns:200px minmax(0,1fr)}.right{grid-template-columns:repeat(2,minmax(0,1fr))}.quickgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.quick:nth-child(2){border-right:0}.quick:nth-child(-n+2){border-bottom:1px solid #292929}.art{width:180px;height:170px}.copy{max-width:68%}}
+@media(max-width:760px){.app{grid-template-rows:56px 1fr 40px}.top{height:56px;padding:0 10px}.brand{min-width:0}.search{display:none}.body{display:block}.sidebar{position:fixed;top:56px;bottom:40px;height:auto;left:0;width:min(280px,86vw);transform:translateX(-110%);z-index:40;background:#000}.sidebar.open{transform:translateX(0)}.main{padding:14px 10px 24px}.hero{padding:22px 16px;min-height:370px}.hero h1{font-size:37px}.hero p{font-size:12px}.copy{max-width:100%}.art{width:120px;height:85px;right:10px;bottom:8px;top:auto;transform:none;opacity:.65}.quickgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.quick{min-height:125px;padding:12px}.quick:nth-child(2){border-right:0}.right{display:grid;grid-template-columns:1fr;padding:0 10px 20px}.right .rail:nth-child(2),.right .rail:nth-child(3){display:none}.tagline{display:none}}
+
 </style>
 </head>
 <body><div class="app"><header class="top"><button class="hamb" onclick="toggleSidebar()">☰</button><a class="brand" href="#" onclick="goHome();return false"><span class="mark" aria-hidden="true">V</span><span class="name">VELCLI</span></a><label class="search">⌕ <input id="globalSearch" placeholder="Tìm kiếm dự án, tài liệu, công cụ..."><span class="key">/</span></label><div class="topactions"><a class="github" href="https://github.com/Velclaw/VelCli" target="_blank">GitHub ↗</a><span class="topdivider">│</span><button onclick="toast('VelCli đang dùng giao diện tối.')">☼</button><button onclick="toast('Chưa có thông báo mới.')">♧</button><button class="lang" onclick="toast('Ngôn ngữ: Tiếng Việt')">VI⌄</button><button class="avatar" onclick="logout()">◉</button></div></header>
