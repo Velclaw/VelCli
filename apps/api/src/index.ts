@@ -17,22 +17,25 @@ const dataDir=path.resolve(process.env.VELCLI_DATA_DIR||path.join(process.cwd(),
 const approvals=new Map<string,{resolve:(ok:boolean)=>void;timer:NodeJS.Timeout;sid:string}>(),sessions=new Map<string,{id:string;ownerId:string;projectId?:string;createdAt:number}>();
 const loginFailures=new Map<string,{count:number;blockedUntil:number;windowStartedAt:number}>();
 const SESSION_TTL_MS=7*24*60*60*1000,LOGIN_WINDOW_MS=15*60*1000,LOGIN_MAX_FAILURES=8,LOGIN_BLOCK_MS=15*60*1000;
-type Store={history:Record<string,any[]>;projects:Record<string,any[]>;activeProjects:Record<string,string>};let store:Store={history:{},projects:{},activeProjects:{}};
+type UserSettings={language:"vi"|"en";agentMode:"chat"|"build";autoRun:boolean;compactUi:boolean;};
+type Store={history:Record<string,any[]>;projects:Record<string,any[]>;activeProjects:Record<string,string>;settings:Record<string,UserSettings>};let store:Store={history:{},projects:{},activeProjects:{},settings:{}};
+const DEFAULT_SETTINGS:UserSettings={language:"vi",agentMode:"chat",autoRun:false,compactUi:false};
+function cleanSettings(input:any):UserSettings{return {language:input?.language==="en"?"en":"vi",agentMode:input?.agentMode==="build"?"build":"chat",autoRun:input?.autoRun===true,compactUi:input?.compactUi===true}};
 const pool=process.env.DATABASE_URL?new Pool({connectionString:process.env.DATABASE_URL,ssl:process.env.DATABASE_SSL==="disable"?false:{rejectUnauthorized:false},max:5,idleTimeoutMillis:30000,connectionTimeoutMillis:10000}):null;
 const COOKIE="velcli_session",MAX_BODY=1024*1024;
 async function load(){
  if(pool){
   await pool.query("CREATE TABLE IF NOT EXISTS velcli_store (key text PRIMARY KEY, value jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now())");
   await pool.query("CREATE TABLE IF NOT EXISTS velcli_workspace_files (workspace_key text NOT NULL, file_path text NOT NULL, content text NOT NULL, updated_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (workspace_key,file_path))");
-  const result=await pool.query("SELECT key,value FROM velcli_store WHERE key IN ('history','projects','activeProjects')");
-  for(const row of result.rows){if(row.key==="history")store.history=row.value||{};if(row.key==="projects")store.projects=row.value||{};if(row.key==="activeProjects")store.activeProjects=row.value||{}}
+  const result=await pool.query("SELECT key,value FROM velcli_store WHERE key IN ('history','projects','activeProjects','settings')");
+  for(const row of result.rows){if(row.key==="history")store.history=row.value||{};if(row.key==="projects")store.projects=row.value||{};if(row.key==="activeProjects")store.activeProjects=row.value||{};if(row.key==="settings")store.settings=row.value||{}}
   return;
  }
- try{store=JSON.parse(await readFile(storeFile,"utf8"));store.activeProjects??={};store.history??={};store.projects??={}}catch{await mkdir(dataDir,{recursive:true});await save()}
+ try{store=JSON.parse(await readFile(storeFile,"utf8"));store.activeProjects??={};store.history??={};store.projects??={};store.settings??={}}catch{await mkdir(dataDir,{recursive:true});await save()}
 }
 async function save(){
  if(pool){
-  await pool.query("INSERT INTO velcli_store(key,value,updated_at) VALUES ('history',$1::jsonb,now()),('projects',$2::jsonb,now()),('activeProjects',$3::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()",[JSON.stringify(store.history),JSON.stringify(store.projects),JSON.stringify(store.activeProjects)]);
+  await pool.query("INSERT INTO velcli_store(key,value,updated_at) VALUES ('history',$1::jsonb,now()),('projects',$2::jsonb,now()),('activeProjects',$3::jsonb,now()),('settings',$4::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()",[JSON.stringify(store.history),JSON.stringify(store.projects),JSON.stringify(store.activeProjects),JSON.stringify(store.settings)]);
   return;
  }
  await mkdir(dataDir,{recursive:true});const tmp=storeFile+"."+randomUUID()+".tmp";await writeFile(tmp,JSON.stringify(store,null,2),"utf8");await rename(tmp,storeFile)
@@ -74,6 +77,8 @@ const server=createServer(async(req,res)=>{try{
  if(req.method==="GET"&&url.pathname==="/api/models")return json(res,200,{providers:getProviderStatus()});
  const sid=requireSession(req,res);if(!sid)return;
  const historyKey=workspaceKey(sid.ownerId,sid.projectId);
+ if(req.method==="GET"&&url.pathname==="/api/settings")return json(res,200,{settings:cleanSettings(store.settings[sid.ownerId]||DEFAULT_SETTINGS),persistence:pool?"postgres":"local-filesystem"});
+ if(req.method==="PUT"&&url.pathname==="/api/settings"){const b=JSON.parse(await read(req));store.settings[sid.ownerId]=cleanSettings(b.settings||b);await save();return json(res,200,{ok:true,settings:store.settings[sid.ownerId],persistence:pool?"postgres":"local-filesystem"})}
  if(req.method==="GET"&&url.pathname==="/api/history")return json(res,200,{messages:store.history[historyKey]||[]});
  if(req.method==="DELETE"&&url.pathname==="/api/history"){store.history[historyKey]=[];await save();return json(res,200,{ok:true})}
  if(req.method==="GET"&&url.pathname==="/api/projects")return json(res,200,{projects:store.projects[sid.ownerId]||[],activeProjectId:sid.projectId||null});
