@@ -166,6 +166,10 @@ main>section:last-child .btn:nth-last-child(-n+4){border-bottom:0}
  .right{padding:0 12px 22px!important}
 }
 
+
+
+/* Strict 90-degree corners everywhere — override every earlier style layer */
+*,*::before,*::after{border-radius:0!important}
 </style>
 </head>
 <body><div class="app"><header class="top"><button class="hamb" onclick="toggleSidebar()">☰</button><a class="brand" href="#" onclick="goHome();return false"><span class="mark" aria-hidden="true">V</span><span class="name">VELCLI</span></a><label class="search">⌕ <input id="globalSearch" placeholder="Tìm kiếm dự án, tài liệu, công cụ..."><span class="key">/</span></label><div class="topactions"><a class="github" href="https://github.com/Velclaw/VelCli" target="_blank">GitHub ↗</a><span class="topdivider">│</span><button onclick="toast('VelCli đang dùng giao diện tối.')">☼</button><button onclick="toast('Chưa có thông báo mới.')">♧</button><button class="lang" onclick="toast('Ngôn ngữ: Tiếng Việt')">VI⌄</button><button class="avatar" onclick="logout()">◉</button></div></header>
