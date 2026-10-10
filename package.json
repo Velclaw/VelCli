@@ -8,7 +8,7 @@
     "dev": "tsx apps/api/src/index.ts",
     "check": "tsc --noEmit",
     "build": "tsc && mkdir -p dist/apps/web && cp apps/web/index.html dist/apps/web/index.html",
-    "test": "npm run check",
+    "test": "npm run build && node scripts/smoke-test.mjs",
     "start": "node dist/apps/api/src/index.js"
   },
   "dependencies": {
