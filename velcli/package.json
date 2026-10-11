@@ -1,0 +1,10 @@
+{
+  "name": "@velclaw/velcli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VelCli Build — mobile-friendly AI engineering CLI",
+  "type": "module",
+  "bin": {"velcli": "./src/cli.mjs"},
+  "scripts": {"test": "node --test"},
+  "engines": {"node": ">=20"}
+}
