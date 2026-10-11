@@ -99,6 +99,32 @@ const server=createServer(async(req,res)=>{try{
   if(req.method==="GET"&&url.pathname==="/api/models")return json(res,200,{providers:getProviderStatus()});
  const sid=requireSession(req,res);if(!sid)return;
  const historyKey=workspaceKey(sid.ownerId,sid.projectId);
+ if(req.method==="GET"&&url.pathname==="/api/admin/backup"){
+  const workspaceFiles:any[]=[];
+  if(pool){
+   const result=await pool.query("SELECT workspace_key,file_path,content,updated_at FROM velcli_workspace_files ORDER BY workspace_key,file_path");
+   workspaceFiles.push(...result.rows);
+  }else{
+   async function walk(dir:string,key:string,relative=""){
+    let entries:any[]=[];try{entries=await readdir(dir,{withFileTypes:true})}catch{return}
+    for(const entry of entries){
+     const abs=path.join(dir,entry.name);if(entry.isSymbolicLink())continue;
+     const rel=path.posix.join(relative,entry.name);
+     if(entry.isDirectory()){await walk(abs,key,rel);continue}
+     if(!entry.isFile())continue;
+     const st=await stat(abs);if(st.size>2*1024*1024)continue;
+     workspaceFiles.push({workspace_key:key,file_path:rel,content:await readFile(abs,"utf8"),updated_at:st.mtime.toISOString()});
+     if(workspaceFiles.length>=1000)return;
+    }
+   }
+   let keys:string[]=[];try{keys=await readdir(workspacesDir)}catch{}
+   for(const key of keys){if(/^[a-zA-Z0-9_-]{1,100}$/.test(key))await walk(path.join(workspacesDir,key),key)}
+  }
+  const payload=JSON.stringify({schemaVersion:1,createdAt:new Date().toISOString(),storage:pool?"postgres":"local-filesystem",store,workspaceFiles},null,2);
+  if(Buffer.byteLength(payload)>25*1024*1024)return json(res,413,{error:"backup_too_large",message:"Backup exceeds the 25 MiB download limit."});
+  res.writeHead(200,headers({"content-type":"application/json; charset=utf-8","content-disposition":'attachment; filename="velcli-backup-'+new Date().toISOString().slice(0,10)+'.json"'}));
+  return res.end(payload);
+ }
  if(req.method==="POST"&&url.pathname==="/api/agent/plan"){
   const b=JSON.parse(await read(req)),prompt=String(b.prompt||"").trim();
   if(!prompt||prompt.length>10000)return json(res,400,{error:"prompt_required",message:"Provide a prompt of at most 10000 characters."});
