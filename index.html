@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VelCli – Build · Deploy · Scale</title>
+<meta name="description" content="VelCli là nền tảng AI coding thế hệ mới: xây dựng, triển khai và quản lý dự án chỉ với vài dòng mô tả, trên mọi thiết bị.">
+<meta property="og:title" content="VelCli – Your AI-Powered Development Platform">
+<meta property="og:description" content="Biến ý tưởng thành ứng dụng thật ngay trên điện thoại.">
+<meta property="og:url" content="https://velcli.dev">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpolygon points='2,8 20,8 32,38 46,8 62,8 38,60 26,60' fill='%234f6bff'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#000;--card:#0a0a0a;--line:#222;--tx:#ededed;--mu:#9a9a9a;--ac:#3b6bff;--g:linear-gradient(135deg,#2f7bff,#8b3dff);--code:#050505;--glow:rgba(79,107,255,.25);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 64px);scroll-behavior:smooth}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14.5px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+a{color:inherit;text-decoration:none}
+.mono,code,pre{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.wrap{max-width:1040px;margin:auto;padding:0 20px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;gap:16px;height:60px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:19px;flex:1}
+header nav{display:flex;gap:6px}
+header nav a{padding:8px 12px;border-radius:10px;color:var(--mu);font-size:14px}
+header nav a.on,header nav a:hover{color:var(--tx);background:var(--code)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;padding:12px 20px;font:600 15px inherit;color:#fff;background:var(--g);cursor:pointer;box-shadow:0 8px 24px var(--glow)}
+.btn.sec{background:transparent;color:var(--tx);border:1px solid var(--line);box-shadow:none}
+.hero{padding:56px 0 40px;text-align:center;background:radial-gradient(60% 50% at 50% 0,var(--glow),transparent)}
+.tag{display:inline-block;padding:4px 12px;border:1px solid var(--line);border-radius:99px;font-size:12px;color:var(--mu);margin-bottom:16px}
+h1{font-size:clamp(26px,6vw,46px);line-height:1.1;margin:0 0 16px;letter-spacing:-1px}
+h1 em{font-style:normal;background:var(--g);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{max-width:620px;margin:0 auto 24px;color:var(--mu);font-size:17px}
+.cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.term{max-width:560px;margin:36px auto 0;text-align:left;background:var(--code);border:1px solid var(--line);border-radius:16px;padding:16px;font-size:13.5px;color:var(--mu);overflow-x:auto}
+.term b{color:var(--ac)}.term .ok{color:#22c55e}
+section.blk{padding:48px 0}
+h2{font-size:clamp(24px,5vw,34px);line-height:1.2;margin:0 0 8px;letter-spacing:-.5px}
+.sub{color:var(--mu);margin:0 0 28px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+.ico svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.card h3{margin:10px 0 4px;font-size:17px}.card p{margin:0;color:var(--mu);font-size:14.5px}
+.ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:var(--code);border:1px solid var(--line)}
+.steps{counter-reset:s;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.steps .card::before{counter-increment:s;content:counter(s);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--g);color:#fff;font-weight:700;font-size:14px}
+.band{margin:24px 0 56px;padding:36px 20px;text-align:center;border-radius:24px;background:var(--g);color:#fff}
+.band h2{color:#fff}.band .btn{background:#fff;color:#2b2fd0;box-shadow:none;margin-top:12px}
+footer{border-top:1px solid var(--line);padding:28px 0;color:var(--mu);font-size:14px}
+footer .wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}
+/* docs */
+.docs{display:grid;gap:24px;padding:32px 0 56px}
+@media (min-width:820px){.docs{grid-template-columns:220px 1fr}.side{position:sticky;top:84px;align-self:start}}
+.side{display:flex;flex-direction:column;gap:2px;font-size:14.5px}
+.side a{padding:8px 12px;border-radius:10px;color:var(--mu)}
+.side a:hover{background:var(--code);color:var(--tx)}
+@media (max-width:819px){.side{flex-direction:row;overflow-x:auto;padding-bottom:6px}.side a{white-space:nowrap;border:1px solid var(--line)}}
+article section{padding:8px 0 28px;border-bottom:1px solid var(--line);margin-bottom:24px}
+article h2{font-size:26px}
+article p{color:var(--mu)}
+pre{position:relative;background:var(--code);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:13px;overflow-x:auto;margin:12px 0}
+pre .cp{position:absolute;top:8px;right:8px;font:12px system-ui;padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--mu);cursor:pointer}
+.note{border-left:3px solid var(--ac);background:var(--code);padding:10px 14px;border-radius:0 10px 10px 0;font-size:14px;color:var(--mu)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<a class="brand" href="#/"><svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f7bff"/><stop offset="1" stop-color="#8b3dff"/></linearGradient></defs><polygon points="2,8 20,8 32,38 46,8 62,8 38,60 26,60" fill="url(#g)"/></svg>VelCli</a>
+<nav><a href="#/" data-r="home">Trang chủ</a><a href="docs.html" data-r="docs">Docs</a></nav>
+</div></header>
+
+<main id="home">
+<div class="hero"><div class="wrap">
+<span class="tag mono">Build · Deploy · Scale</span>
+<h1>Biến ý tưởng thành ứng dụng thật <em>ngay trên điện thoại</em></h1>
+<p class="lead">VelCli là nền tảng AI coding thế hệ mới: xây dựng, triển khai và quản lý dự án chỉ với vài dòng mô tả. Ở bất cứ đâu, trên mọi thiết bị.</p>
+<div class="cta"><a class="btn" href="https://velcli.dev">Bắt đầu ngay →</a><a class="btn sec" href="docs.html">Đọc tài liệu</a></div>
+<div class="term mono"><b>›</b> Tạo một ứng dụng blog fullstack với Next.js, Tailwind và PostgreSQL<br><span class="ok">✓</span> Đã tạo xong! Ứng dụng đã sẵn sàng.<br><b>$</b> npm run dev<br><span class="ok">✓</span> Ready on http://localhost:3000</div>
+</div></div>
+
+<section class="blk"><div class="wrap">
+<h2>Mọi thứ để đi từ ý tưởng đến sản phẩm</h2><p class="sub">Năm module hoạt động cùng nhau trong một nền tảng.</p>
+<div class="grid">
+<a class="card" href="docs.html#/agent"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/></svg></div><h3>AI Agent</h3><p>Tạo ứng dụng từ mô tả bằng ngôn ngữ tự nhiên.</p></a>
+<a class="card" href="docs.html#/workspace"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 10l3 3-3 3M12.5 16H17"/></svg></div><h3>Workspace</h3><p>Editor, Files và Terminal trong một giao diện.</p></a>
+<a class="card" href="docs.html#/host"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg></div><h3>VelclawHost</h3><p>Deploy và hosting tự động chỉ với một chạm.</p></a>
+<a class="card" href="docs.html#/hub"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.8"/></svg></div><h3>VelcliHub</h3><p>Template và cộng đồng để bắt đầu nhanh hơn.</p></a>
+<a class="card" href="docs.html#/plugins"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 01-12 0zM12 17v4"/></svg></div><h3>Plugins</h3><p>GitHub, Vercel, Database, AI Models và hơn thế nữa.</p></a>
+</div></div></section>
+
+<section class="blk"><div class="wrap">
+<h2>Ba bước từ ý tưởng đến trực tuyến</h2><p class="sub">Không cần cấu hình phức tạp.</p>
+<div class="steps">
+<div class="card"><h3>Mô tả</h3><p>Nói cho AI Agent biết bạn muốn xây gì.</p></div>
+<div class="card"><h3>Chỉnh sửa</h3><p>Xem trước, sửa code ngay trong Workspace.</p></div>
+<div class="card"><h3>Deploy</h3><p>Build, Deploy, Live qua VelclawHost.</p></div>
+</div>
+<div class="band"><h2>Sẵn sàng xây dựng điều tiếp theo?</h2><p>Bắt đầu miễn phí tại velcli.dev</p><a class="btn" href="https://velcli.dev">Bắt đầu ngay</a></div>
+</div></section>
+</main>
+
+<main id="docsPage" hidden><div class="wrap docs">
+<nav class="side" id="side">
+<a href="docs.html#/start">Bắt đầu nhanh</a><a href="docs.html#/agent">AI Agent</a><a href="docs.html#/workspace">Workspace</a><a href="docs.html#/host">VelclawHost</a><a href="docs.html#/hub">VelcliHub</a><a href="docs.html#/plugins">Plugins</a>
+</nav>
+<article>
+<section id="start"><h2>Bắt đầu nhanh</h2><p>Tạo dự án đầu tiên chỉ với một mô tả. Mở velcli.dev, chọn <b>Tạo ứng dụng mới</b> và nhập yêu cầu.</p>
+<pre class="mono"><button class="cp">Sao chép</button>Tạo một trang web portfolio với Next.js và Tailwind</pre>
+<p class="note">Các lệnh và ví dụ trong tài liệu này mang tính minh họa. Hãy đối chiếu với mã nguồn trong repository trước khi phát hành.</p></section>
+<section id="agent"><h2>AI Agent</h2><p>Agent lập kế hoạch, tạo và sửa file, chạy build rồi báo kết quả. Bạn có thể xem trước (Preview) hoặc mở mã nguồn để chỉnh tiếp.</p></section>
+<section id="workspace"><h2>Workspace</h2><p>Explorer, Editor và Terminal nằm chung một màn hình, tối ưu cho điện thoại.</p>
+<pre class="mono"><button class="cp">Sao chép</button>npm install
+npm run dev</pre></section>
+<section id="host"><h2>VelclawHost</h2><p>Chọn tên dự án và nhánh (ví dụ <code>main</code>), bấm <b>Deploy</b>. Hệ thống chạy ba bước: Build, Deploy, Live.</p></section>
+<section id="hub"><h2>VelcliHub</h2><p>Kho template và cộng đồng: Next.js Blog, AI Chatbot, Portfolio. Chọn template rồi deploy ngay.</p></section>
+<section id="plugins"><h2>Plugins</h2><p>Mở rộng tính năng: GitHub Integration, Vercel Deployment, Database (PostgreSQL / MongoDB), AI Models (OpenAI / Gemini / Groq).</p></section>
+</article></div></main>
+
+<footer><div class="wrap"><span>© VelCli · Build · Deploy · Scale</span><span><a href="https://velcli.dev">velcli.dev</a> · <a href="https://github.com/Velclaw/VelCli">GitHub</a></span></div></footer>
+<script>
+const $=s=>document.querySelector(s);
+function route(){
+  const p=location.hash.replace(/^#\/?/,'').split('/'),docs=p[0]==='docs';
+  $('#home').hidden=docs;$('#docsPage').hidden=!docs;
+  document.querySelectorAll('header nav a').forEach(a=>a.classList.toggle('on',a.dataset.r===(docs?'docs':'home')));
+  if(docs&&p[1]){const t=document.getElementById(p[1]);if(t)t.scrollIntoView()}else scrollTo(0,0);
+}
+addEventListener('hashchange',route);route();
+document.addEventListener('click',e=>{const b=e.target.closest('.cp');if(!b)return;
+  const t=b.parentElement.textContent.replace(b.textContent,'').trim();
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{b.textContent='Đã chép'},()=>{b.textContent='Lỗi'});
+  setTimeout(()=>b.textContent='Sao chép',1500)});
+</script>
+</body>
+</html>
