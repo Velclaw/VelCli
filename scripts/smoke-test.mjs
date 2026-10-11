@@ -46,7 +46,13 @@ try{
  const sessionCookie=(login.headers.get("set-cookie")||"").split(";")[0];
  const emptyPlan=await fetch(base+"/api/agent/plan",{method:"POST",headers:{"content-type":"application/json",cookie:sessionCookie},body:JSON.stringify({prompt:""}),signal:AbortSignal.timeout(2500)});
  assert(emptyPlan.status===400,"Plan Mode must reject an empty prompt before model invocation.");
- console.log("VelCli production smoke tests passed: root HTML, health, auth status, model status, login, and Plan Mode authorization.");
+ const backup=await fetch(base+"/api/admin/backup",{headers:{cookie:sessionCookie},signal:AbortSignal.timeout(2500)});
+ assert(backup.status===200,"Authenticated backup endpoint must return HTTP 200.");
+ const backupData=await backup.json();
+ assert(backupData.schemaVersion===1&&backupData.store&&Array.isArray(backupData.workspaceFiles),"Backup export structure is invalid.");
+ const privateBackup=await fetch(base+"/api/admin/backup",{signal:AbortSignal.timeout(2500)});
+ assert(privateBackup.status===401,"Backup export must require an authenticated session.");
+ console.log("VelCli production smoke tests passed: root HTML, health, auth, Plan Mode, and authenticated backup export.");
 }catch(error){
  console.error("VelCli production smoke tests failed:",error instanceof Error?error.stack:String(error));
  process.exitCode=1;
