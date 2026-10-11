@@ -32,7 +32,7 @@ try{
  assert(home.status===200,"Root route must return HTTP 200.");
  assert((home.headers.get("content-type")||"").includes("text/html"),"Root route must serve HTML, not JSON.");
  assert(html.toLowerCase().includes("<!doctype html")&&html.includes("VELCLI"),"Production UI HTML is missing or incomplete.");
- for(const match of html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi)){if(match[1].trim())new vm.Script(match[1],{filename:"apps/web/index.html inline script"});}
+ for(const match of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)){if(match[1].trim())new vm.Script(match[1],{filename:"apps/web/index.html inline script"});}
  const health=await (await request("/health")).json();
  assert(health.ok===true&&health.service==="velcli","Health endpoint payload is invalid.");
  assert(health.authConfigured===true,"Admin password configuration is not detected.");
