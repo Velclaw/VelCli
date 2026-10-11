@@ -10,7 +10,7 @@ import {Pool} from "pg";
 const exec=promisify(execFile);
 function withoutTrailingSlash(value:string){return value.endsWith("/")?value.slice(0,-1):value}
 import {AgentRuntime} from "../../../packages/agent-runtime/src/index.js";
-import {getProviderStatus} from "../../../packages/model-router/src/index.js";
+import {ModelRouter,getProviderStatus} from "../../../packages/model-router/src/index.js";
 import {runInWorkspace} from "../../../packages/agent-tools/src/workspace.js";
 import type {ApprovalRequest,AgentEvent} from "../../../packages/shared/src/types.js";
 const port=Number(process.env.PORT||8787),webFile=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../../web/index.html");
@@ -81,6 +81,22 @@ const server=createServer(async(req,res)=>{try{
   if(req.method==="GET"&&url.pathname==="/api/models")return json(res,200,{providers:getProviderStatus()});
  const sid=requireSession(req,res);if(!sid)return;
  const historyKey=workspaceKey(sid.ownerId,sid.projectId);
+ if(req.method==="POST"&&url.pathname==="/api/agent/plan"){
+  const b=JSON.parse(await read(req)),prompt=String(b.prompt||"").trim();
+  if(!prompt||prompt.length>10000)return json(res,400,{error:"prompt_required",message:"Provide a prompt of at most 10000 characters."});
+  try{
+   const raw=await new ModelRouter().chat([
+    {role:"system",content:"You are VelCli Plan Mode. Produce a careful implementation plan only. Do not execute tools, edit files, run commands, or claim any action has been performed. Return exactly one JSON object with keys summary (string), steps (array of strings), risks (array of strings), acceptanceCriteria (array of strings). Keep steps actionable and limited to 12. No markdown fences."},
+    {role:"user",content:prompt}
+   ]);
+   const parsed=JSON.parse(raw);
+   if(!parsed||typeof parsed.summary!=="string"||!Array.isArray(parsed.steps))return json(res,502,{error:"invalid_plan_response"});
+   const plan={summary:String(parsed.summary).slice(0,2000),steps:parsed.steps.slice(0,12).map((x:any)=>String(x).slice(0,500)),risks:Array.isArray(parsed.risks)?parsed.risks.slice(0,12).map((x:any)=>String(x).slice(0,500)):[],acceptanceCriteria:Array.isArray(parsed.acceptanceCriteria)?parsed.acceptanceCriteria.slice(0,12).map((x:any)=>String(x).slice(0,500)):[]};
+   const at=new Date().toISOString();store.history[historyKey]??=[];store.history[historyKey].push({role:"user",content:redactSensitive(prompt),at},{role:"assistant",content:redactSensitive(JSON.stringify(plan)),at});
+   await save();
+   return json(res,200,{mode:"plan",sideEffects:false,plan});
+  }catch(error){return json(res,502,{error:"plan_generation_failed",message:redactSensitive(error instanceof Error?error.message:String(error))})}
+ }
  if(req.method==="GET"&&url.pathname==="/api/settings")return json(res,200,{settings:cleanSettings(store.settings[sid.ownerId]||DEFAULT_SETTINGS),persistence:pool?"postgres":"local-filesystem"});
  if(req.method==="PUT"&&url.pathname==="/api/settings"){const b=JSON.parse(await read(req));store.settings[sid.ownerId]=cleanSettings(b.settings||b);await save();return json(res,200,{ok:true,settings:store.settings[sid.ownerId],persistence:pool?"postgres":"local-filesystem"})}
  if(req.method==="GET"&&url.pathname==="/api/history")return json(res,200,{messages:store.history[historyKey]||[]});
