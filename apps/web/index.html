@@ -322,18 +322,18 @@ async function runAgent(){
    const d=await api("/api/agent/plan",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({prompt})});
    const plan=d.plan||{};
    const sections=[String(plan.summary||"Kế hoạch đã tạo.")];
-   if(Array.isArray(plan.steps)&&plan.steps.length)sections.push("CÁC BƯỚC\\n"+plan.steps.map((x,i)=>(i+1)+". "+x).join("\\n"));
-   if(Array.isArray(plan.acceptanceCriteria)&&plan.acceptanceCriteria.length)sections.push("TIÊU CHÍ HOÀN THÀNH\\n"+plan.acceptanceCriteria.map(x=>"• "+x).join("\\n"));
-   if(Array.isArray(plan.risks)&&plan.risks.length)sections.push("RỦI RO\\n"+plan.risks.map(x=>"• "+x).join("\\n"));
-   thinking.remove();chatBubble("assistant",sections.join("\\n\\n"));add({type:"agent.plan",message:"Plan Mode hoàn tất — không có lệnh hoặc tệp nào được thực thi."});return;
+   if(Array.isArray(plan.steps)&&plan.steps.length)sections.push("CÁC BƯỚC\n"+plan.steps.map((x,i)=>(i+1)+". "+x).join("\n"));
+   if(Array.isArray(plan.acceptanceCriteria)&&plan.acceptanceCriteria.length)sections.push("TIÊU CHÍ HOÀN THÀNH\n"+plan.acceptanceCriteria.map(x=>"• "+x).join("\n"));
+   if(Array.isArray(plan.risks)&&plan.risks.length)sections.push("RỦI RO\n"+plan.risks.map(x=>"• "+x).join("\n"));
+   thinking.remove();chatBubble("assistant",sections.join("\n\n"));add({type:"agent.plan",message:"Plan Mode hoàn tất — không có lệnh hoặc tệp nào được thực thi."});return;
   }
   let task=agentMode==="build"?"MODE: BUILD_WEB_APP. Lập kế hoạch, tạo/sửa file, chạy build/test phù hợp và báo kết quả; tự chạy lệnh an toàn, không phá huỷ dữ liệu. Yêu cầu: "+prompt:"MODE: CHAT. Trả lời như chatbot bình thường khi hỏi kiến thức; nếu yêu cầu code/build thì dùng agent. Yêu cầu: "+prompt;
   if(!$("autoRun").checked)task+=" Trước khi chạy command hãy yêu cầu phê duyệt.";
   const r=await fetch("/api/agent/stream",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({prompt:task})});
   if(!r.ok)throw Error(await r.text());
   const reader=r.body.getReader(),dec=new TextDecoder();let buf="",msgs=[];
-  while(true){const {value,done}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});const parts=buf.split("\\n\\n");buf=parts.pop()||"";for(const part of parts){const line=part.split("\\n").find(x=>x.startsWith("data: "));if(!line)continue;try{const e=JSON.parse(line.slice(6));add(e);const m=e.message||e.error||e.tool;if(m&&/completed|error|plan|command|build|file|approval/i.test(e.type||""))msgs.push((e.type||"agent")+": "+(typeof m==="string"?m:JSON.stringify(m)))}catch{}}}
-  thinking.remove();chatBubble("assistant",msgs.length?msgs.join("\\n\\n"):"Agent đã kết thúc lượt chạy. Xem Agent activity để biết chi tiết.");
+  while(true){const {value,done}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});const parts=buf.split("\n\n");buf=parts.pop()||"";for(const part of parts){const line=part.split("\n").find(x=>x.startsWith("data: "));if(!line)continue;try{const e=JSON.parse(line.slice(6));add(e);const m=e.message||e.error||e.tool;if(m&&/completed|error|plan|command|build|file|approval/i.test(e.type||""))msgs.push((e.type||"agent")+": "+(typeof m==="string"?m:JSON.stringify(m)))}catch{}}}
+  thinking.remove();chatBubble("assistant",msgs.length?msgs.join("\n\n"):"Agent đã kết thúc lượt chạy. Xem Agent activity để biết chi tiết.");
  }catch(e){thinking.remove();add({type:"agent.error",error:e.message});chatBubble("assistant","Lỗi: "+e.message);toast(e.message,true)}
  finally{running=false;$("run").disabled=false;$("run").textContent="↑ Gửi"}
 }
