@@ -25,6 +25,7 @@
 | Khu vực | Vai trò |
 |---|---|
 | **AI Agent** | Nhận yêu cầu bằng ngôn ngữ tự nhiên và hỗ trợ các tác vụ phát triển phần mềm. |
+| **Plan Mode** | Endpoint `/api/agent/plan` tạo kế hoạch JSON chỉ đọc, không gọi tool hoặc thực thi lệnh; yêu cầu phiên đăng nhập. |
 | **Workspace Editor** | Duyệt tệp, chỉnh sửa mã nguồn và làm việc với bản xem trước. |
 | **Projects & Chat History** | Quản lý dự án và lịch sử trò chuyện; cần cấu hình PostgreSQL để lưu dữ liệu có cấu trúc bền vững. |
 | **VelclawHost** | Tầng điều phối hosting/deployment trong hệ sinh thái; repository riêng: [Velclaw/VelclawHost](https://github.com/Velclaw/VelclawHost). |
