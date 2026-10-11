@@ -61,6 +61,7 @@ npm start
 
 - **PostgreSQL:** cấu hình `DATABASE_URL` trong Render để lưu lịch sử chat, metadata dự án và lựa chọn dự án đang hoạt động khi backend hỗ trợ.
 - **Workspace files:** tệp dự án cần cơ chế lưu bền vững riêng; filesystem tạm của hosting có thể bị xóa khi restart/redeploy.
+- **Backup export:** sau khi đăng nhập, mở `/api/admin/backup` để tải JSON gồm lịch sử, dự án, cài đặt và workspace files. Endpoint chỉ cho phiên đã xác thực; hãy lưu file backup ở nơi an toàn.
 - **Settings:** cài đặt người dùng cần được lưu theo tài khoản/phạm vi người dùng và khôi phục từ backend; không lưu các bí mật vào bảng settings.
 - **Health check:** kiểm tra endpoint `/health`; trường `database.connected` cần là `true` để xác nhận ứng dụng kết nối được PostgreSQL. HTTP 200 một mình không chứng minh dữ liệu đã được ghi/đọc thành công.
 
