@@ -41,7 +41,12 @@ try{
  const login=await fetch(base+"/api/auth/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({password:"smoke-test-password"}),signal:AbortSignal.timeout(2500)});
  assert(login.status===200,"Valid admin password should be accepted.");
  assert((login.headers.get("set-cookie")||"").includes("HttpOnly"),"Session cookie must be HttpOnly.");
- console.log("VelCli production smoke tests passed: root HTML, health, auth status, model status, login.");
+ const unauthPlan=await fetch(base+"/api/agent/plan",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({prompt:"plan this"}),signal:AbortSignal.timeout(2500)});
+ assert(unauthPlan.status===401,"Plan Mode must require an authenticated session.");
+ const sessionCookie=(login.headers.get("set-cookie")||"").split(";")[0];
+ const emptyPlan=await fetch(base+"/api/agent/plan",{method:"POST",headers:{"content-type":"application/json",cookie:sessionCookie},body:JSON.stringify({prompt:""}),signal:AbortSignal.timeout(2500)});
+ assert(emptyPlan.status===400,"Plan Mode must reject an empty prompt before model invocation.");
+ console.log("VelCli production smoke tests passed: root HTML, health, auth status, model status, login, and Plan Mode authorization.");
 }catch(error){
  console.error("VelCli production smoke tests failed:",error instanceof Error?error.stack:String(error));
  process.exitCode=1;
