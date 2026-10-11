@@ -67,7 +67,25 @@ async function persistWorkspace(s:{ownerId:string;projectId?:string}){
  return {persisted:true,files:files.length,bytes};
 }
 function safePath(root:string,p:string){const x=path.resolve(root,p||".");if(x!==root&&!x.startsWith(root+path.sep))throw new Error("Path escapes workspace");return x}
-async function runAgent(sid:string,prompt:string,emit:(e:AgentEvent)=>void){const active=sessions.get(sid);if(!active)throw new Error("Session expired");await restoreWorkspace(active);try{return await runInWorkspace(workspaceKey(active.ownerId,active.projectId),()=>new AgentRuntime().execute(prompt,emit,async(r:ApprovalRequest)=>new Promise<boolean>(resolve=>{const timer=setTimeout(()=>{approvals.delete(r.id);resolve(false)},Number(process.env.VELCLI_APPROVAL_TIMEOUT_MS||300000));approvals.set(r.id,{resolve,timer,sid})})))}finally{try{const result=await persistWorkspace(active);if(!result.persisted&&pool)console.warn("Workspace persistence unavailable:",result.reason)}catch(error){console.error("Workspace persistence failed:",error instanceof Error?error.message:String(error))}}}
+async function runAgent(sid:string,prompt:string,emit:(e:AgentEvent)=>void){
+ const active=sessions.get(sid);if(!active)throw new Error("Session expired");
+ await restoreWorkspace(active);
+ let guidance="";
+ try{guidance=(await readFile(path.join(workspaceDir(active),"AGENTS.md"),"utf8")).slice(0,12000)}catch{}
+ try{
+  return await runInWorkspace(workspaceKey(active.ownerId,active.projectId),()=>new AgentRuntime().execute(
+   prompt,emit,
+   async(r:ApprovalRequest)=>new Promise<boolean>(resolve=>{
+    const timer=setTimeout(()=>{approvals.delete(r.id);resolve(false)},Number(process.env.VELCLI_APPROVAL_TIMEOUT_MS||300000));
+    approvals.set(r.id,{resolve,timer,sid});
+   }),
+   guidance
+  ));
+ }finally{
+  try{const result=await persistWorkspace(active);if(!result.persisted&&pool)console.warn("Workspace persistence unavailable:",result.reason)}
+  catch(error){console.error("Workspace persistence failed:",error instanceof Error?error.message:String(error))}
+ }
+}
 const server=createServer(async(req,res)=>{try{
  if(req.method==="OPTIONS"){res.writeHead(204,headers());return res.end()}
  const url=new URL(req.url||"/","http://localhost");
