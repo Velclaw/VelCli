@@ -1,0 +1,42 @@
+name: Install VelCli Skills Pack
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install-skills:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: chore/install-velcli-skills-pack
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Skills Pack
+        run: npx --yes skills add https://skills.sh/p/M7CAQgGtttevFJ0M --yes
+
+      - name: Show installed skill files
+        run: |
+          echo "Installed skill files:"
+          find . -name SKILL.md -not -path './node_modules/*' -print
+
+      - name: Commit installed skills
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No file changes produced by the installer."
+            exit 1
+          fi
+          git commit -m "chore: install VelCli skills pack"
+          git push origin chore/install-velcli-skills-pack
