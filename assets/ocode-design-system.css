@@ -1,0 +1,42 @@
+/* VelCli visual system adapted from OCode.js layout principles.
+   Original VelCli copy, features, routes, and application behavior are intentionally preserved. */
+:root{color-scheme:dark;--ocode-bg:#000;--ocode-panel:#080a0e;--ocode-panel-2:#0c1018;--ocode-fg:#f7f8fa;--ocode-muted:#969eac;--ocode-line:#222832;--ocode-blue:#5b9dff;--ocode-violet:#8b7bff;--ocode-glow:rgba(59,130,246,.16)}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit}
+:focus-visible{outline:2px solid var(--ocode-blue)!important;outline-offset:3px}
+::selection{background:rgba(91,157,255,.34);color:#fff}
+/* Public landing page: retain VelCli wording and section order. */
+.wrap{max-width:1120px}
+body:has(.wrap){background:radial-gradient(ellipse 68% 430px at 50% -170px,rgba(38,91,200,.19),transparent 76%),linear-gradient(180deg,#000 0%,#030406 58%,#000 100%);color:var(--ocode-fg)}
+body:has(.wrap) header{background:rgba(0,0,0,.82);border-color:rgba(255,255,255,.09);backdrop-filter:blur(16px)}
+body:has(.wrap) .tag{border-radius:3px;border-color:#252b36;background:rgba(7,9,13,.75);color:#bdc7d7}
+body:has(.wrap) .btn{border-radius:3px;border:1px solid #343b48;box-shadow:none}
+body:has(.wrap) .btn:not(.sec){background:#f5f7fa;color:#08090b}
+body:has(.wrap) .btn.sec{background:transparent;color:var(--ocode-fg);border-color:#343b48}
+body:has(.wrap) .term,body:has(.wrap) .card,body:has(.wrap) .road-item{border-radius:0;border-color:var(--ocode-line);box-shadow:none}
+body:has(.wrap) .term{background:rgba(5,6,9,.9)}
+body:has(.wrap) .card,body:has(.wrap) .road-item{background:linear-gradient(145deg,rgba(14,16,22,.96),rgba(4,5,8,.98))}
+body:has(.wrap) h1 em{background:linear-gradient(105deg,#fff 10%,#bcd7ff 56%,#8b83ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+body:has(.wrap) .lead,body:has(.wrap) .card p{color:var(--ocode-muted)}
+body:has(.wrap) section{border-color:rgba(255,255,255,.075)}
+/* Engineering Console: unify forms, panels, navigation, and controls without changing JS behavior. */
+.app{background:linear-gradient(180deg,#000 0%,#030406 58%,#000 100%);color:var(--ocode-fg)}
+.app .top{background:rgba(0,0,0,.86);border-color:var(--ocode-line);backdrop-filter:blur(16px)}
+.app .body{background:transparent}
+.app .sidebar{background:#050608;border-color:var(--ocode-line)}
+.app .main{background:transparent}
+.app .search,.app input,.app textarea,.app select{background:#080a0e;color:var(--ocode-fg);border-color:#303744;border-radius:4px}
+.app .search:focus-within,.app input:focus,.app textarea:focus,.app select:focus{border-color:var(--ocode-blue);box-shadow:0 0 0 3px rgba(91,157,255,.12)}
+.app .nav button,.app .nav a{border-radius:4px}
+.app .nav button.active,.app .nav a.active{background:linear-gradient(100deg,rgba(91,157,255,.12),rgba(139,123,255,.08));border-color:rgba(91,157,255,.28);box-shadow:inset 2px 0 var(--ocode-blue)}
+.app .hero,.app .card,.app .panel,.app .widget,.app .section-card,.app .brandcard{border-radius:4px;border-color:var(--ocode-line);box-shadow:none}
+.app .hero{background:radial-gradient(ellipse at 83% 55%,rgba(91,157,255,.10),transparent 38%),linear-gradient(120deg,#080a0e,#050608 70%,#090812)}
+.app .btn,.app button,.app .quick,.app .outline{border-radius:4px}
+.app .btn.primary,.app .primary{background:linear-gradient(105deg,#f5f7fa,#dbe6ff);border-color:transparent;color:#08090b;box-shadow:none}
+.app .btn.primary:hover,.app .primary:hover{background:#dce7ff}
+.app .label,.app .muted,.app .hint{color:var(--ocode-muted)}
+.app .sep,.app hr{border-color:var(--ocode-line);background:var(--ocode-line)}
+.app table,.app th,.app td{border-color:var(--ocode-line)}
+@media(max-width:760px){body:has(.wrap) .wrap{padding-left:16px;padding-right:16px}.app .top{padding-left:14px;padding-right:14px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
